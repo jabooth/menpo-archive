@@ -5,9 +5,7 @@ from libcpp.vector cimport vector
 from libcpp.set cimport set
 from cython.operator cimport dereference as deref, preincrement as inc
 import numpy as np
-cimport numpy as np
-import cython
-cimport cython
+cimport numpy as cnp
 
 class MeshConstructionError(Exception):
     pass
@@ -55,30 +53,31 @@ cdef extern from "./cpp/halfedge.h":
 # TODO: document me
 cdef class CppTriMesh:
     cdef Mesh* thisptr
+    cdef points
+    cdef trilist
 
-    def __cinit__(self, points,
-            np.ndarray[unsigned, ndim=2, mode="c"] trilist not None):
+    def __cinit__(self, points, unsigned[: , ::1] trilist not None):
         if points.shape[1] != 3:
             raise MeshConstructionError("A CppTriMesh can only be in 3 "
                    + "dimensions (attempting with " + str(points.shape[1]) +
                                         ")")
         self.thisptr = new Mesh(&trilist[0,0], trilist.shape[0],
                                 points.shape[0])
+        self.points = points
+        self.trilist = trilist
 
     def __dealloc__(self):
         del self.thisptr
 
-    @property
+    def __reduce__(self):
+        return self.__class__, (np.asarray(self.points),
+                                np.asarray(self.trilist))
+
     def n_fulledges(self):
         return self.thisptr.n_fulledges
 
-    @property
     def n_halfedges(self):
         return self.thisptr.n_halfedges
-
-    @property
-    def n_edges(self):
-        return self.thisptr.n_halfedges - self.thisptr.n_fulledges
 
     def verify_mesh(self):
         self.thisptr.verify_mesh()
@@ -91,19 +90,15 @@ cdef class CppTriMesh:
         assert 0 <= n_triangle < self.thisptr.n_triangles
         deref(self.thisptr.triangles[n_triangle]).status()
 
-    def reduce_tri_scalar_per_vertex_to_vertices(self,
-            np.ndarray[double, ndim=2, mode="c"] tri_s not None):
-        cdef np.ndarray[double, ndim=1, mode='c'] vert_s = \
+    def reduce_t_scalar_per_v_to_v(self, double[:, ::1] tri_s not None):
+        cdef cnp.ndarray[double, ndim=1, mode='c'] v_scalar = \
             np.zeros(self.thisptr.n_vertices)
-        self.thisptr.reduce_tri_scalar_per_vertex_to_vertices(
-            &tri_s[0,0], &vert_s[0])
-        return vert_s
+        self.thisptr.reduce_tri_scalar_per_vertex_to_vertices(&tri_s[0,0],
+                                                              &v_scalar[0])
+        return v_scalar
 
-    def reduce_tri_scalar_to_vertices(self,
-            np.ndarray[double, ndim=1, mode="c"] triangle_scalar not None):
-        cdef np.ndarray[double, ndim=1, mode='c'] vertex_scalar = \
+    def reduce_t_scalar_to_vs(self, double[::1] t_scalar not None):
+        cdef cnp.ndarray[double, ndim=1, mode='c'] v_scalar = \
             np.zeros(self.thisptr.n_vertices)
-        self.thisptr.reduce_tri_scalar_to_vertices(&triangle_scalar[0],
-            &vertex_scalar[0])
-        return vertex_scalar
-
+        self.thisptr.reduce_tri_scalar_to_vertices(&t_scalar[0], &v_scalar[0])
+        return v_scalar
