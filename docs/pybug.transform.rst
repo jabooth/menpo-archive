@@ -25,18 +25,26 @@ transform Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`piecewiseaffine` Module
------------------------------
+:mod:`fastpwa` Module
+---------------------
 
-.. automodule:: pybug.transform.piecewiseaffine
+.. automodule:: pybug.transform.fastpwa
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`statisticallydriven` Module
----------------------------------
+:mod:`modeldriven` Module
+-------------------------
 
-.. automodule:: pybug.transform.statisticallydriven
+.. automodule:: pybug.transform.modeldriven
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`piecewiseaffine` Module
+-----------------------------
+
+.. automodule:: pybug.transform.piecewiseaffine
     :members:
     :undoc-members:
     :show-inheritance:

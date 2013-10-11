@@ -1,6 +1,14 @@
 model Package
 =============
 
+:mod:`model` Package
+--------------------
+
+.. automodule:: pybug.model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`base` Module
 ------------------
 

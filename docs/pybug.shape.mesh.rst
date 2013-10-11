@@ -33,6 +33,14 @@ mesh Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`normals` Module
+---------------------
+
+.. automodule:: pybug.shape.mesh.normals
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`textured` Module
 ----------------------
 

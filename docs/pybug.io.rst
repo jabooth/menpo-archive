@@ -57,6 +57,22 @@ io Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`landmark_mesh` Module
+---------------------------
+
+.. automodule:: pybug.io.landmark_mesh
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`spatial_image` Module
+---------------------------
+
+.. automodule:: pybug.io.spatial_image
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 

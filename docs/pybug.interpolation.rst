@@ -1,10 +1,10 @@
-warp Package
-============
+interpolation Package
+=====================
 
-:mod:`warp` Package
--------------------
+:mod:`interpolation` Package
+----------------------------
 
-.. automodule:: pybug.warp
+.. automodule:: pybug.interpolation
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ warp Package
 :mod:`base` Module
 ------------------
 
-.. automodule:: pybug.warp.base
+.. automodule:: pybug.interpolation.base
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ warp Package
 :mod:`cinterp` Module
 ---------------------
 
-.. automodule:: pybug.warp.cinterp
+.. automodule:: pybug.interpolation.cinterp
     :members:
     :undoc-members:
     :show-inheritance:

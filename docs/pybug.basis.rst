@@ -1,18 +1,18 @@
-image Package
+basis Package
 =============
 
-:mod:`image` Package
+:mod:`basis` Package
 --------------------
 
-.. automodule:: pybug.image
+.. automodule:: pybug.basis
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`base` Module
-------------------
+:mod:`rbf` Module
+-----------------
 
-.. automodule:: pybug.image.base
+.. automodule:: pybug.basis.rbf
     :members:
     :undoc-members:
     :show-inheritance:

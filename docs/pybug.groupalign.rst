@@ -1,10 +1,10 @@
-rigid Package
-=============
+groupalign Package
+==================
 
-:mod:`rigid` Package
---------------------
+:mod:`groupalign` Package
+-------------------------
 
-.. automodule:: pybug.align.rigid
+.. automodule:: pybug.groupalign
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ rigid Package
 :mod:`base` Module
 ------------------
 
-.. automodule:: pybug.align.rigid.base
+.. automodule:: pybug.groupalign.base
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ rigid Package
 :mod:`procrustes` Module
 ------------------------
 
-.. automodule:: pybug.align.rigid.procrustes
+.. automodule:: pybug.groupalign.procrustes
     :members:
     :undoc-members:
     :show-inheritance:

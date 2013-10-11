@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   pybug/pybug.rst
+   pybug.rst
 
 Indices and tables
 ==================
