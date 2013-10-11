@@ -44,11 +44,12 @@ class AbstractPWATransform(PureAlignmentTransform):
     Raises
     ------
     ValueError
-        Source and target must both be 2D.
+    Source and target must both be 2D.
 
     TriangleContainmentError
-        All points to apply must be contained in a source triangle. Check
-        ``error.points_outside_source_domain`` to handle this case.
+    All points to apply must be contained in a source triangle. Check
+    ``error.points_outside_source_domain`` to handle this case.
+
     """
     __metaclass__ = abc.ABCMeta
 
@@ -66,9 +67,11 @@ class AbstractPWATransform(PureAlignmentTransform):
         Finds for each input point the index of it's bounding triangle
         and the alpha and beta value for that point in the triangle. Note
         this means that the following statements will always be true:
+
             alpha + beta <= 1
             alpha >= 0
             beta >= 0
+
         for each triangle result.
         Trying to map a point that does not exist in a
         triangle throws a TriangleContainmentError.
@@ -245,11 +248,11 @@ class DiscreteAffinePWATransform(AbstractPWATransform):
     Raises
     ------
     ValueError
-        Source and target must both be 2D.
+    Source and target must both be 2D.
 
     TriangleContainmentError
-        All points to apply_inplace must be contained in a source triangle. Check
-        ``error.points_outside_source_domain`` to handle this case.
+    All points to apply_inplace must be contained in a source triangle.
+    Check ``error.points_outside_source_domain`` to handle this case.
     """
     def __init__(self, source, target):
         super(DiscreteAffinePWATransform, self).__init__(
@@ -308,9 +311,11 @@ class DiscreteAffinePWATransform(AbstractPWATransform):
         Finds for each input point the index of it's bounding triangle
         and the alpha and beta value for that point in the triangle. Note
         this means that the following statements will always be true:
+
             alpha + beta <= 1
             alpha >= 0
             beta >= 0
+
         for each triangle result.
         Trying to map a point that does not exist in a
         triangle throws a TriangleContainmentError.
@@ -336,6 +341,7 @@ class DiscreteAffinePWATransform(AbstractPWATransform):
         TriangleContainmentError
         All ``points`` must be contained in a source triangle. Check
         ``error.points_outside_source_domain`` to handle this case.
+
         """
         alpha, beta = self.alpha_beta(points)
         each_point = np.arange(points.shape[0])
@@ -354,7 +360,7 @@ class DiscreteAffinePWATransform(AbstractPWATransform):
             Points to calculate the barycentric coordinates for.
 
         Returns
-        --------
+        -------
         alpha : (K, ``n_tris``)
             The alpha for each point and triangle. Alpha can be interpreted
             as the contribution of the ij vector to the position of the
@@ -462,7 +468,7 @@ class CachedPWATransform(AbstractPWATransform):
 
     The apply method in this case involves dotting the triangle vectors with
     the values of alpha and beta found. The calculation of alpha and beta is
-     done in C, and a hash map is used to cache lookup values.
+    done in C, and a hash map is used to cache lookup values.
 
     Parameters
     ----------
@@ -478,11 +484,11 @@ class CachedPWATransform(AbstractPWATransform):
     Raises
     ------
     ValueError
-        Source and target must both be 2D.
+    Source and target must both be 2D.
 
     TriangleContainmentError
-        All points to apply must be contained in a source triangle. Check
-        ``error.points_outside_source_domain`` to handle this case.
+    All points to apply must be contained in a source triangle. Check
+    ``error.points_outside_source_domain`` to handle this case.
     """
     def __init__(self, source, target):
         super(CachedPWATransform, self).__init__(source, target)

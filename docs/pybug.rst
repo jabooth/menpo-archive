@@ -7,10 +7,10 @@ PyBug
     pybug.convolution
     pybug.decomposition
     pybug.decorator
+    exception
     pybug.geodesics
     Aligning sets of shapes <pybug.groupalign>
-    Working with Images <pybug.image>
-    pybug.interpolation
+    image
     pybug.io
     Landmarking data <pybug.landmark>
     The Luckas Kanade framework <pybug.lucaskanade>

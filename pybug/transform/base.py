@@ -364,7 +364,7 @@ class AlignableTransform(AbstractTransform):
 
 class PureAlignmentTransform(AlignableTransform, Viewable):
     r"""
-    :class:`AlignableTransform`s that are solely defined in terms of a source
+    :class:`AlignableTransform` that are solely defined in terms of a source
     and target alignment.
 
     All transforms include support for alignments - all have a source and
