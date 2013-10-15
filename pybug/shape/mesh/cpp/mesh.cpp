@@ -119,8 +119,7 @@ std::vector< std::set<Vertex*> > Mesh::contiguous_regions() {
      * Note: a set of size one impies that the vertex is not used in any
      * triangle.
      */
-    std::set<Vertex*> vertices_not_visited(
-            vertices.begin(), vertices.end());
+    std::set<Vertex*> vertices_not_visited(vertices.begin(), vertices.end());
     std::vector< std::set<Vertex*> > vertices_per_region;
     std::set<Vertex*>::iterator v;
     while (!vertices_not_visited.empty()) {

@@ -46,13 +46,26 @@ HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
 
 HalfEdge::~HalfEdge(){}
 
+void HalfEdge::flip() {
+    // fix up the vertex halfedge connectivity
+    v0->halfedges.erase(self);
+    v1->halfedges.insert(self);
+    // flip vertex 0-1 on self
+    Vertex* v_temp = v0;
+    v0 = v1;
+    v1 = v_temp;
+    // flip vertex indices
+    int v0_tri_i_temp = v0_tri_i;
+    v0_tri_i = v1_tri_i;
+    v1_tri_i = v0_tri_i_temp;
+}
+
 bool HalfEdge::part_of_fulledge() {
-    if (halfedge != NULL) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return halfedge != NULL;
+}
+
+Triangle* other_triangle() {
+    return part_of_fulledge() ? halfedge.triangle : NULL;
 }
 
 HalfEdge* HalfEdge::ccw_around_tri() {

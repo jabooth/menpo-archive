@@ -25,6 +25,52 @@ Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0_in,
 
 Triangle::~Triangle() {}
 
+Triangle* t0(){
+    return e0->other_triangle();
+}
+
+Triangle* t1(){
+    return e1->other_triangle();
+}
+
+Triangle* t2(){
+    return e2->other_triangle();
+}
+
+std::set<Triangle *> adjacent_triangles(){
+    std::set<Triangle *> triangles;
+    triangles.insert(t0());
+    triangles.insert(t1());
+    triangles.insert(t2());
+    triangles.erase(NULL);
+    return triangles;
+}
+
+void Triangle::flip_from_triangle(Triangle *tri){
+    // flip the meaning of each half edge around.
+    e0->flip();
+    e1->flip();
+    e2->flip();
+    // now the state of halfedges and vertices are fixed up, but this triangle
+    // is all wrong.
+    // make sure v0, v1, v2 are correct in meaning by flipping v0, v1
+    Vertex *v0_temp = v0;
+    v0 = v1;
+    v1 = v0_temp;
+    // make sure e0, e1, e2 have the correct meaning by flipping e1, e2
+    HalfEdge *e1_temp = e1;
+    e1 = e2;
+    e2 = e1_temp;
+    // get each neighbouring triangle, other than the one who called us
+     std::set<Triangle*> adjacent_tris = adjacent_triangles()
+    if (tri != NULL)
+        adjacent_tris.erase(tri);
+    std::set<Triangle*>::iterator it;
+    // flip thy neighbour
+    for (it = adjacent_tris.begin(), it != adjacent_tris.end(); it++)
+        (*it)->flip_from_triangle(this);
+}
+
 void Triangle::reduce_scalar_to_vertices(double* triangle_scalar,
         double* vertex_scalar) {
     vertex_scalar[v0->id] += triangle_scalar[id];

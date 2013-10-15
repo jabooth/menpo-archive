@@ -18,6 +18,15 @@ class Triangle : public MeshAttribute
         Triangle(Mesh* mesh, unsigned id, Vertex* v0, Vertex* v1, Vertex* v2);
         ~Triangle();
 
+        // accessing
+        Triangle* t0();
+        Triangle* t1();
+        Triangle* t2();
+        std::set<Triangle *> adjacent_triangles();
+
+        // repairing
+        void flip_from_triangle(Triangle *tri);
+
         // algorithms
         void reduce_scalar_per_vertex_to_vertices(
                 double* triangle_scalar_per_vertex, double* vertex_scalar);

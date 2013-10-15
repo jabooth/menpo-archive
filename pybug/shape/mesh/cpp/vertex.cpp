@@ -18,6 +18,8 @@ HalfEdge* Vertex::add_halfedge_to(Vertex* vertex, Triangle* triangle,
     // so desired
     HalfEdge* he = halfedge_to_vertex(vertex);
     if(he == NULL) {
+        // There isn't already a halfedge to this vertex - good job! Build a
+        // fresh one and attach it.
         HalfEdge* halfedge = new HalfEdge(this->mesh, this, vertex, triangle,
                 id_on_tri_of_v0);
         halfedges.insert(halfedge);
