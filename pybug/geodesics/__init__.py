@@ -1,1 +1,1 @@
-from base import TriMeshGeodesics
+from base import Geodesics
