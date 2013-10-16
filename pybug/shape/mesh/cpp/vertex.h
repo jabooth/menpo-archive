@@ -9,18 +9,20 @@ class Vertex;
 
 class Vertex : public MeshAttribute
 {
-    public:
+    private:
         std::set<HalfEdge*> halfedges; //halfedges STARTING from this vertex
         std::set<Triangle*> triangles; //ALL triangles attached to this vertex
         std::set<Vertex*> vertices; //ALL other vertices attached to this vertex
+
+    public:
         Vertex(Mesh* mesh, unsigned id);
         ~Vertex();
 
         // mesh construction methods
-        HalfEdge* add_halfedge_to(Vertex* vertex, Triangle* triangle,
-                unsigned id_on_tri_of_v0);
+        void add_halfedge(HalfEdge* halfedge);
         void add_triangle(Triangle* triangle);
         void add_vertex(Vertex* vertex);
+        void remove_halfedge(HalfEdge* halfedge);
 
         // halfedge retrieval methods about this vertex
         HalfEdge* halfedge_on_triangle(Triangle* triangle);
@@ -41,4 +43,3 @@ class Vertex : public MeshAttribute
         void test_contiguous(std::set<Vertex*>* vertices_visited);
         friend std::ostream& operator<<(std::ostream& out, const Vertex& vertex);
 };
-

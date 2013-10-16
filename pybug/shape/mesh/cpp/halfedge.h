@@ -14,8 +14,8 @@ class HalfEdge : public MeshAttribute
         int v2_tri_i; // v0_tri_i == 1, v1_tri_i == 2 ... (always CCW)
         Triangle* triangle;
         Triangle* other_triangle();
-        HalfEdge(Mesh* mesh, Vertex* v0, Vertex* v1,
-                Triangle* triangle, unsigned id_on_tri_of_v0);
+        HalfEdge(Mesh* mesh, Vertex* v0, Vertex* v1, Vertex* v2,
+                Triangle* triangle, unsigned int tri_halfedge_id);
         ~HalfEdge();
         bool part_of_fulledge();
         void flip(); // flip this half edge, fixing up all vertex pointers

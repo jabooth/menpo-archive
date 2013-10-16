@@ -5,40 +5,15 @@
 #include "halfedge.h"
 #include "triangle.h"
 
-Vertex::Vertex(Mesh* mesh_in, unsigned vertex_id): MeshAttribute(mesh_in, vertex_id) {
-}
+Vertex::Vertex(Mesh* mesh_in, unsigned vertex_id):
+               MeshAttribute(mesh_in, vertex_id) {}
 
 Vertex::~Vertex() {
     halfedges.clear();
 }
 
-HalfEdge* Vertex::add_halfedge_to(Vertex* vertex, Triangle* triangle,
-        unsigned id_on_tri_of_v0) {
-    // returns the created half edge so it can be attached to the triangle if
-    // so desired
-    HalfEdge* he = halfedge_to_vertex(vertex);
-    if(he == NULL) {
-        // There isn't already a halfedge to this vertex - good job! Build a
-        // fresh one and attach it.
-        HalfEdge* halfedge = new HalfEdge(this->mesh, this, vertex, triangle,
-                id_on_tri_of_v0);
-        halfedges.insert(halfedge);
-        return halfedge;
-    }
-    else {
-        std::cout << "CHIRAL CONSISTENCY: FAIL"
-            << std::endl;
-        std::cout << "    V" << id << " already has a half edge to V" <<
-            vertex->id << " on triangle T" << he->triangle->id <<
-            " yet triangle T" << triangle->id <<
-            " is trying to create another one." << std::endl;
-        std::cout << "    This means that one of the two triangles listed ";
-        std::cout << "above has flipped normals, or the two triangles";
-        std::cout << " are \n    a repeat of each other." << std::endl;
-        std::cout << "    This repeated halfedge will not be created so ";
-        std::cout << "expect segfaults if you try to continue." << std::endl;
-        return NULL;
-    }
+void Vertex::add_halfedge(HalfEdge* halfedge) {
+    halfedges.insert(halfedge);
 }
 
 void Vertex::add_triangle(Triangle* triangle) {
@@ -49,43 +24,32 @@ void Vertex::add_vertex(Vertex* vertex) {
     vertices.insert(vertex);
 }
 
+void Vertex::remove_halfedge(HalfEdge* halfedge) {
+    halfedges.erase(halfedge);
+}
+
 HalfEdge* Vertex::halfedge_on_triangle(Triangle* triangle) {
     std::set<HalfEdge*>::iterator he;
-    for(he = halfedges.begin(); he != halfedges.end(); he++) {
-        if((*he)->triangle == triangle) {
+    for(he = halfedges.begin(); he != halfedges.end(); he++)
+        if((*he)->triangle == triangle)
             return *he;
-        }
-    }
-    //std::cout << "V:" << this << " does not have a HE to V:" << vertex << std::endl;
     return NULL;
 }
 
 HalfEdge* Vertex::halfedge_to_vertex(Vertex* vertex) {
     std::set<HalfEdge*>::iterator he;
-    for(he = halfedges.begin(); he != halfedges.end(); he++) {
-        if((*he)->v1 == vertex) {
+    for(he = halfedges.begin(); he != halfedges.end(); he++)
+        if((*he)->v1 == vertex)
             return *he;
-        }
-    }
     return NULL;
 }
 
 HalfEdge* Vertex::halfedge_to_or_from_vertex(Vertex* vertex) {
     HalfEdge* he = halfedge_to_vertex(vertex);
-    if (he != NULL) {
-        return he;
-    }
-    else {
-        he = vertex->halfedge_to_vertex(this);
-    }
-    if (he != NULL) {
-        return he;
-    }
-    else {
-        std::cout << "WARNING: could not find a half edge to or from"
-            << std::endl;
-        return NULL;
-    }
+    if (he == NULL)
+        he = vertex->halfedge_to_vertex(this);  // try the other way...
+    // he could be NULL or a genuine HalfEdge* - either way, return it
+    return he;
 }
 
 void Vertex::laplacian(unsigned* i_sparse, unsigned* j_sparse,
@@ -183,27 +147,21 @@ void Vertex::status() {
     std::set<HalfEdge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++) {
         std::cout << "|" ;
-        if ((*he)->part_of_fulledge()) {
+        if ((*he)->part_of_fulledge())
             std::cout << "=";
-        }
-        else {
+        else
             std::cout << "-";
-        }
         std::cout << "V" << (*he)->v1->id;
         std::cout << " (T" << (*he)->triangle->id;
-        if ((*he)->part_of_fulledge()) {
+        if ((*he)->part_of_fulledge())
             std::cout << "=T" << (*he)->halfedge->triangle->id;
-        }
         std::cout << ")" << std::endl;
     }
 }
 
-void Vertex::test_contiguous(std::set<Vertex*>* vertices_not_visited){
+void Vertex::test_contiguous(std::set<Vertex*>* vertices_not_visited) {
     std::set<Vertex*>::iterator v;
-    for (v = vertices.begin(); v != vertices.end(); v++) {
-        if (vertices_not_visited->erase(*v)) {
+    for (v = vertices.begin(); v != vertices.end(); v++)
+        if (vertices_not_visited->erase(*v))
             (*v)->test_contiguous(vertices_not_visited);
-        }
-    }
 }
-

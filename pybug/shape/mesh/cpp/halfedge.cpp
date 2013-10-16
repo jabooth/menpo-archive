@@ -6,88 +6,56 @@
 
 
 HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
-        Triangle* triangle_in,
-        unsigned id_on_tri_of_v0) : MeshAttribute( mesh_in, id_on_tri_of_v0) {
+                   Vertex* v2_in, Triangle* triangle_in,
+                   unsigned int tri_halfedge_id) :
+                   MeshAttribute(mesh_in, tri_halfedge_id) {
     mesh->n_halfedges++;
     v0 = v0_in;
     v1 = v1_in;
+    v2 = v2_in;
     triangle = triangle_in;
+    // attach up halfedges and increase mesh counts for edges/halfedges
     halfedge = v1->halfedge_to_vertex(v0);
-    switch (id_on_tri_of_v0) {
-        case 0:
-            v0_tri_i = 0;
-            v1_tri_i = 1;
-            v2_tri_i = 2;
-            v2 = triangle->v2;
-            break;
-        case 1:
-            v0_tri_i = 1;
-            v1_tri_i = 2;
-            v2_tri_i = 0;
-            v2 = triangle->v0;
-            break;
-        case 2:
-            v0_tri_i = 2;
-            v1_tri_i = 0;
-            v2_tri_i = 1;
-            v2 = triangle->v1;
-            break;
-    }
-    if (halfedge != NULL) {
-        // setting opposite halfedge to me
+    if (!halfedge)
+        // try the other way. Note that this is now a broken halfedge, which
+        // the triangle who constructed me will have to detect and fix.
+        halfedge = v0->halfedge_to_vertex(v1);
+    if (halfedge) {
+        // setting opposite halfedge to me, and inc global full edge count
         halfedge->halfedge = this;
         mesh->n_fulledges++;
-    }
-    else {
-        // first time weve encountered this
+    } else {
+        // this truly is the first time this edge exists
         mesh_in->add_edge(this);
     }
 }
 
 HalfEdge::~HalfEdge(){}
 
-void HalfEdge::flip() {
-    // fix up the vertex halfedge connectivity
-    v0->halfedges.erase(self);
-    v1->halfedges.insert(self);
-    // flip vertex 0-1 on self
-    Vertex* v_temp = v0;
-    v0 = v1;
-    v1 = v_temp;
-    // flip vertex indices
-    int v0_tri_i_temp = v0_tri_i;
-    v0_tri_i = v1_tri_i;
-    v1_tri_i = v0_tri_i_temp;
-}
-
 bool HalfEdge::part_of_fulledge() {
     return halfedge != NULL;
 }
 
-Triangle* other_triangle() {
-    return part_of_fulledge() ? halfedge.triangle : NULL;
+Triangle* HalfEdge::other_triangle() {
+    return this->part_of_fulledge() ? halfedge->triangle : NULL;
 }
 
 HalfEdge* HalfEdge::ccw_around_tri() {
-    HalfEdge* he = NULL;
-    if (v1->id == triangle->v0->id) {
-        he = triangle->e0;
-    }
-    else if (v1->id == triangle->v1->id) {
-        he = triangle->e1;
-    }
-    else if (v1->id == triangle->v2->id) {
-        he = triangle->e2;
-    }
-    else {
-        std::cout << "ERROR: cannot find HE!" << std::endl;
-    }
-    return he;
+    return v1->halfedge_on_triangle(triangle);
+}
+
+void HalfEdge::flip() {
+    // fix up the vertex halfedge connectivity
+    v0->remove_halfedge(this);
+    v1->add_halfedge(this);
+    // flip vertex 0-1 on self
+    Vertex* v_temp = v0;
+    v0 = v1;
+    v1 = v_temp;
 }
 
 double HalfEdge::length() {
-    // TODO actually calcuate this
+    // TODO actually calculate this
     std::cout << "This isn't actually calculating the length" << std::endl;
     return 1.0;
 }
-
