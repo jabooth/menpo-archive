@@ -18,9 +18,9 @@ cdef extern from "./cpp/mesh.h":
         unsigned n_triangles
         unsigned n_halfedges
         unsigned n_fulledges
-        vector[Vertex*] vertices
-        vector[Triangle*] triangles
-        vector[HalfEdge*] halfedges
+        vector[Vertex*]* vertices
+        vector[Triangle*]* triangles
+        vector[HalfEdge*]* halfedges
         void laplacian(unsigned* i_sparse, unsigned* j_sparse,
                 double* v_sparse)
         void cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
@@ -84,11 +84,11 @@ cdef class CppTriMesh:
 
     def vertex_status(self, n_vertex):
         assert 0 <= n_vertex < self.thisptr.n_vertices
-        deref(self.thisptr.vertices[n_vertex]).status()
+        deref(deref(self.thisptr.vertices)[n_vertex]).status()
 
     def tri_status(self, n_triangle):
         assert 0 <= n_triangle < self.thisptr.n_triangles
-        deref(self.thisptr.triangles[n_triangle]).status()
+        deref(deref(self.thisptr.triangles)[n_triangle]).status()
 
     def reduce_t_scalar_per_v_to_v(self, double[:, ::1] tri_s not None):
         cdef cnp.ndarray[double, ndim=1, mode='c'] v_scalar = \
