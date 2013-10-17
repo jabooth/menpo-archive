@@ -105,8 +105,8 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
         HalfEdge* he = halfedge_to_or_from_vertex(*v);
         double w_ij = cot_per_tri_vertex[(he->triangle->id*3) + he->v2_tri_i];
         if (he->part_of_fulledge()) {
-            w_ij += cot_per_tri_vertex[(he->halfedge->triangle->id*3) +
-                he->halfedge->v2_tri_i];
+            w_ij += cot_per_tri_vertex[(he->paired_halfedge()->triangle->id*3) +
+                he->paired_halfedge()->v2_tri_i];
         }
         else {
             //w_ij += w_ij;
@@ -135,7 +135,8 @@ void Vertex::verify_halfedge_connectivity() {
             std::cout << "cannie spin raarnd the triangle like man!"
                 << std::endl;
         if((*he)->part_of_fulledge()) {
-            if((*he)->halfedge->v0 != (*he)->v1 || (*he)->halfedge->v1 != (*he)->v0)
+            if((*he)->paired_halfedge()->v0 != (*he)->v1 ||
+               (*he)->paired_halfedge()->v1 != (*he)->v0)
                 std::cout << "some half edges aren't paired up !"
                     << std::endl;
         }
@@ -154,7 +155,7 @@ void Vertex::status() {
         std::cout << "V" << (*he)->v1->id;
         std::cout << " (T" << (*he)->triangle->id;
         if ((*he)->part_of_fulledge())
-            std::cout << "=T" << (*he)->halfedge->triangle->id;
+            std::cout << "=T" << (*he)->paired_halfedge()->triangle->id;
         std::cout << ")" << std::endl;
     }
 }

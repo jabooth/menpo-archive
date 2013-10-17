@@ -72,8 +72,8 @@ void Mesh::test_chiral_consistency() {
         if ((*edge)->part_of_fulledge()) {
             fulledges_encountered++;
             halfedges_encountered++;
-            if ((*edge)->halfedge->v1 != (*edge)->v0 ||
-                    (*edge)->halfedge->v0 != (*edge)->v1) {
+            if ((*edge)->paired_halfedge()->v1 != (*edge)->v0 ||
+                    (*edge)->paired_halfedge()->v0 != (*edge)->v1) {
                 pass = false;
             }
         }

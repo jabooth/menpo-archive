@@ -3,8 +3,15 @@
 
 class HalfEdge : public MeshAttribute
 {
+    private:
+        HalfEdge* paired_halfedge_;
     public:
-        HalfEdge* halfedge; // the opposite halfedge in the fulledge (or NULL)
+        // accessors
+
+        // the opposite halfedge in the fulledge (or NULL)
+        HalfEdge* paired_halfedge() const;
+        void set_paired_halfedge(HalfEdge* value);
+
         // TODO rename these to distinguish from v0 on triangle
         Vertex* v0;
         Vertex* v1;
@@ -15,7 +22,7 @@ class HalfEdge : public MeshAttribute
         Triangle* triangle;
         Triangle* other_triangle();
         HalfEdge(Mesh* mesh, Vertex* v0, Vertex* v1, Vertex* v2,
-                Triangle* triangle, unsigned int tri_halfedge_id);
+                 Triangle* triangle, unsigned int tri_halfedge_id);
         ~HalfEdge();
         bool part_of_fulledge();
         void flip(); // flip this half edge, fixing up all vertex pointers
@@ -23,3 +30,4 @@ class HalfEdge : public MeshAttribute
         HalfEdge* ccw_around_tri();
         double length();
 };
+

@@ -12,7 +12,7 @@ class Triangle : public MeshAttribute
         void resolve_chirality(bool e0_bad, bool e1_bad, bool e2_bad);
         HalfEdge* add_halfedge_between(Vertex* v0, Vertex* v1, Vertex* v2,
                                        unsigned v0_id);
-        void recursive_flip(std::set<Triangle*>* visited_tris);
+        void recursiveFlip(std::set<Triangle*>* visited_tris);
 
 
     public:

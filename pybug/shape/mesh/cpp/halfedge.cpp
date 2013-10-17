@@ -15,14 +15,14 @@ HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
     v2 = v2_in;
     triangle = triangle_in;
     // attach up halfedges and increase mesh counts for edges/halfedges
-    halfedge = v1->halfedge_to_vertex(v0);
+    HalfEdge* halfedge = v1->halfedge_to_vertex(v0);
     if (!halfedge)
         // try the other way. Note that this is now a broken halfedge, which
         // the triangle who constructed me will have to detect and fix.
         halfedge = v0->halfedge_to_vertex(v1);
     if (halfedge) {
         // setting opposite halfedge to me, and inc global full edge count
-        halfedge->halfedge = this;
+        halfedge->set_paired_halfedge(this);
         mesh->n_fulledges++;
     } else {
         // this truly is the first time this edge exists
@@ -32,12 +32,20 @@ HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
 
 HalfEdge::~HalfEdge(){}
 
+HalfEdge* HalfEdge::paired_halfedge() const {
+    return paired_halfedge_;
+}
+
+void HalfEdge::set_paired_halfedge(HalfEdge* value) {
+    paired_halfedge_ = value;
+}
+
 bool HalfEdge::part_of_fulledge() {
-    return halfedge != NULL;
+    return paired_halfedge() != NULL;
 }
 
 Triangle* HalfEdge::other_triangle() {
-    return this->part_of_fulledge() ? halfedge->triangle : NULL;
+    return this->part_of_fulledge() ? paired_halfedge()->triangle : NULL;
 }
 
 HalfEdge* HalfEdge::ccw_around_tri() {
@@ -59,3 +67,4 @@ double HalfEdge::length() {
     std::cout << "This isn't actually calculating the length" << std::endl;
     return 1.0;
 }
+
