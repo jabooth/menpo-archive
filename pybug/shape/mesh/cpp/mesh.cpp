@@ -202,4 +202,3 @@ MeshAttribute::MeshAttribute(Mesh* mesh_in, unsigned id_in) {
     mesh = mesh_in;
     id = id_in;
 }
-

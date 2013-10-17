@@ -1,5 +1,6 @@
 #pragma once
 #include "mesh.h"
+#include "triangle.h"
 
 class HalfEdge : public MeshAttribute
 {
@@ -29,5 +30,7 @@ class HalfEdge : public MeshAttribute
         // along the way
         HalfEdge* ccw_around_tri();
         double length();
+        friend std::ostream& operator<<(std::ostream& out, const HalfEdge* h) {
+            return out << "H" << (h->id/3) << ":" << h->id % 3;
+        }
 };
-

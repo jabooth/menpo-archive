@@ -9,9 +9,9 @@ class Triangle : public MeshAttribute
 {
     private:
         // repairs damaged chiral meshes (ensures all faces point same way)
-        void resolve_chirality(bool e0_bad, bool e1_bad, bool e2_bad);
-        HalfEdge* add_halfedge_between(Vertex* v0, Vertex* v1, Vertex* v2,
-                                       unsigned v0_id);
+        void resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad);
+        HalfEdge* createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
+                                 unsigned halfedge_id);
         void recursiveFlip(std::set<Triangle*>* visited_tris);
 
 
@@ -30,7 +30,7 @@ class Triangle : public MeshAttribute
         std::set<Triangle*> adjacent_triangles();
 
         // repairing
-        void flip_contiguous_region();
+        void flipContiguousRegion();
 
         // algorithms
         void reduce_scalar_per_vertex_to_vertices(
@@ -40,4 +40,21 @@ class Triangle : public MeshAttribute
 
         // utilities
         void status();
+        friend std::ostream& operator<<(std::ostream& out, const Triangle* t) {
+            return out << "T" << t->id;
+        }
 };
+
+// Little idea for making Triangle Iterable things..
+//template <class T>
+//class TriangleIterable{
+//    std::vector<T> ijk;
+//    T* cw_;
+//    T* ccw_;
+//
+//    public:
+//        TriangleIterator(T item, T* ccw, T* cw);
+//        T ccw();
+//        T cw();
+//};
+

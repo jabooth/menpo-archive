@@ -6,33 +6,44 @@
 #include "triangle.h"
 
 Vertex::Vertex(Mesh* mesh_in, unsigned vertex_id):
-               MeshAttribute(mesh_in, vertex_id) {}
+               MeshAttribute(mesh_in, vertex_id) {
+	std::cout << this << " - constructor" << std::endl;
+}
 
 Vertex::~Vertex() {
+	std::cout << this << " - destructor" << std::endl;
     halfedges.clear();
 }
 
 void Vertex::add_halfedge(HalfEdge* halfedge) {
+	std::cout << this << " - added " << halfedge << std::endl;
     halfedges.insert(halfedge);
 }
 
 void Vertex::add_triangle(Triangle* triangle) {
+	std::cout << this << " - added " << triangle << std::endl;
     triangles.insert(triangle);
 }
 
 void Vertex::add_vertex(Vertex* vertex) {
+	std::cout << this << " - added " << vertex << std::endl;
     vertices.insert(vertex);
 }
 
 void Vertex::remove_halfedge(HalfEdge* halfedge) {
+	std::cout << this << " - removed " << halfedge << std::endl;
     halfedges.erase(halfedge);
 }
 
 HalfEdge* Vertex::halfedge_on_triangle(Triangle* triangle) {
+	std::cout << this << " - trying to find " << triangle < ".. ";
     std::set<HalfEdge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
-        if((*he)->triangle == triangle)
+        if((*he)->triangle == triangle) {
+            std::cout << "found! Joined by " << (*he) << std::endl;
             return *he;
+        }
+	std::cout << "not found" << std::endl;
     return NULL;
 }
 
@@ -137,8 +148,7 @@ void Vertex::verify_halfedge_connectivity() {
         if((*he)->part_of_fulledge()) {
             if((*he)->paired_halfedge()->v0 != (*he)->v1 ||
                (*he)->paired_halfedge()->v1 != (*he)->v0)
-                std::cout << "some half edges aren't paired up !"
-                    << std::endl;
+                std::cout << "T" << triangle->id << " H:" << (*he)->id << std::endl;
         }
     }
 }

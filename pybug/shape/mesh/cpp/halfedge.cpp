@@ -7,13 +7,16 @@
 
 HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
                    Vertex* v2_in, Triangle* triangle_in,
-                   unsigned int tri_halfedge_id) :
+                   unsigned tri_halfedge_id) :
                    MeshAttribute(mesh_in, tri_halfedge_id) {
     mesh->n_halfedges++;
     v0 = v0_in;
     v1 = v1_in;
     v2 = v2_in;
     triangle = triangle_in;
+    // we need to change our id to be correct - hacky!
+    id = (3 * triangle->id) + tri_halfedge_id;
+    std::cout << this << " - constructor"<< std::endl;
     // attach up halfedges and increase mesh counts for edges/halfedges
     HalfEdge* halfedge = v1->halfedge_to_vertex(v0);
     if (!halfedge)
