@@ -1,0 +1,5 @@
+# nasty eclipse files
+.cproject
+.project
+# any built exe's
+*.exe
