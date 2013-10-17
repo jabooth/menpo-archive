@@ -9,6 +9,12 @@
 #include "halfedge.h"
 
 Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
+    // initialize our vectors, and reserve the space
+    triangles = new std::vector<Triangle*>;
+    triangles->reserve(n_tris_in);
+    vertices = new std::vector<Vertex*>;
+    vertices->reserve(n_vertices_in);
+    edges = new std::set<HalfEdge*>;
     n_vertices = n_vertices_in;
     n_triangles = n_tris_in;
     // set the no. of full/half edges to 0
@@ -16,7 +22,7 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
     n_fulledges = 0;
     n_halfedges = 0;
     for(unsigned i = 0; i < n_vertices; i++) {
-        vertices.push_back(new Vertex(this, i));
+        vertices->push_back(new Vertex(this, i));
     }
     for(unsigned i = 0; i < n_triangles; i++) {
         // get the index into the vertex positions
@@ -26,19 +32,19 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
         // build a new triangle passing in the pointers to the vertices it will
         // be made from (the triangle in it's construction will build edges and
         // connect them)
-        triangles.push_back(new Triangle(this, i, vertices[l],
-                    vertices[m], vertices[n]));
+        triangles->push_back(new Triangle(this, i, (*vertices)[l], 
+                    (*vertices)[m], (*vertices)[n]));
     }
 }
 
 void Mesh::add_edge(HalfEdge* halfedge) {
-    edges.insert(halfedge);
+    edges->insert(halfedge);
 }
 
 void Mesh::generate_edge_index(unsigned* edge_index) {
     std::set<HalfEdge*>::iterator he;
     unsigned count = 0;
-    for(he = edges.begin(); he != edges.end(); he++, count++)
+    for(he = edges->begin(); he != edges->end(); he++, count++)
     {
         edge_index[count*2]     = (*he)->v0->id;
         edge_index[count*2 + 1] = (*he)->v1->id;
@@ -46,15 +52,18 @@ void Mesh::generate_edge_index(unsigned* edge_index) {
 }
 
 Mesh::~Mesh() {
-    triangles.clear();
+    triangles->clear();
     // now all the triangles are clear we're good to delete all the vertices
     // we initially made
-    vertices.clear();
+    vertices->clear();
+    delete triangles;
+    delete vertices;
+    delete edges;
 }
 
 void Mesh::verify_mesh() {
     std::vector<Vertex*>::iterator v;
-    for(v = vertices.begin(); v != vertices.end(); v++) {
+    for(v = vertices->begin(); v != vertices->end(); v++) {
         (*v)->verify_halfedge_connectivity();
     }
     test_contiguous();
@@ -62,12 +71,12 @@ void Mesh::verify_mesh() {
 }
 
 void Mesh::test_chiral_consistency() {
-    std::cout << "CHIRALCONSISTENCY: ";
+    //std::cout << "CHIRALCONSISTENCY: ";
     std::set<HalfEdge*>::iterator edge;
     bool pass = true;
     unsigned fulledges_encountered = 0;
     unsigned halfedges_encountered = 0;
-    for (edge = edges.begin(); edge != edges.end(); edge++) {
+    for (edge = edges->begin(); edge != edges->end(); edge++) {
         halfedges_encountered++;
         if ((*edge)->part_of_fulledge()) {
             fulledges_encountered++;
@@ -79,31 +88,31 @@ void Mesh::test_chiral_consistency() {
         }
     }
     if (pass) {
-        std::cout << "PASS" << std::endl;
+        //std::cout << "PASS" << std::endl;
     }
     else {
-        std::cout << "FAIL" << std::endl;
+        //std::cout << "FAIL" << std::endl;
     }
-    std::cout << "EDGECOUNT: ";
+    //std::cout << "EDGECOUNT: ";
     if (fulledges_encountered == n_fulledges &&
             halfedges_encountered == n_halfedges) {
-        std::cout << "PASS" << std::endl;
+        //std::cout << "PASS" << std::endl;
     }
     else {
-        std::cout << "FAIL" << std::endl;
+        //std::cout << "FAIL" << std::endl;
     }
 }
 
 void Mesh::test_contiguous() {
     std::vector< std::set<Vertex*> > vertices_per_region = contiguous_regions();
     size_t regions_count = vertices_per_region.size();
-    std::cout << "Vertices are grouped into " <<
-        regions_count << " contiguous region(s)." << std::endl;
+    //std::cout << "Vertices are grouped into " <<
+        //regions_count << " contiguous region(s)." << std::endl;
     if (regions_count > 1) {
         size_t largest_region = (*vertices_per_region.begin()).size();
         int region_pc= int((100.0 * largest_region) / n_vertices);
-        std::cout << "The largest contiguous region acounts for approximatey "
-            << region_pc << "\% of the mesh." << std::endl;
+        //std::cout << "The largest contiguous region acounts for approximatey "
+        //    << region_pc << "\% of the mesh." << std::endl;
     }
 }
 
@@ -119,7 +128,7 @@ std::vector< std::set<Vertex*> > Mesh::contiguous_regions() {
      * Note: a set of size one impies that the vertex is not used in any
      * triangle.
      */
-    std::set<Vertex*> vertices_not_visited(vertices.begin(), vertices.end());
+    std::set<Vertex*> vertices_not_visited(vertices->begin(), vertices->end());
     std::vector< std::set<Vertex*> > vertices_per_region;
     std::set<Vertex*>::iterator v;
     while (!vertices_not_visited.empty()) {
@@ -161,7 +170,7 @@ void Mesh::laplacian(unsigned* i_sparse, unsigned* j_sparse,
     // This method will populate the sparse matrix arrays with the
     // position and value that should be assiged to the matrix
     std::vector<Vertex*>::iterator v;
-    for(v = vertices.begin(); v != vertices.end(); v++) {
+    for(v = vertices->begin(); v != vertices->end(); v++) {
         (*v)->laplacian(i_sparse, j_sparse, v_sparse,
                 sparse_pointer, weight_type);
     }
@@ -175,7 +184,7 @@ void Mesh::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
     }
     unsigned sparse_pointer = n_vertices;
     std::vector<Vertex*>::iterator v;
-    for(v = vertices.begin(); v != vertices.end(); v++){
+    for(v = vertices->begin(); v != vertices->end(); v++){
         (*v)->cotangent_laplacian(i_sparse, j_sparse, v_sparse,
                 sparse_pointer, cotangents);
     }
@@ -185,7 +194,7 @@ void Mesh::reduce_tri_scalar_per_vertex_to_vertices(
         double* triangle_scalar_per_vertex, double* vertex_scalar) {
     // this one is for when we have a scalar value defined at each vertex of each triangle
     std::vector<Triangle*>::iterator t;
-    for(t = triangles.begin(); t != triangles.end(); t++)
+    for(t = triangles->begin(); t != triangles->end(); t++)
         (*t)->reduce_scalar_per_vertex_to_vertices(triangle_scalar_per_vertex, vertex_scalar);
 }
 
@@ -193,7 +202,7 @@ void Mesh::reduce_tri_scalar_to_vertices(double* triangle_scalar, double* vertex
     // this one is for when we have a scalar value defined at each triangle and needs to be
     // applied to each vertex
     std::vector<Triangle*>::iterator t;
-    for(t = triangles.begin(); t != triangles.end(); t++)
+    for(t = triangles->begin(); t != triangles->end(); t++)
         (*t)->reduce_scalar_to_vertices(triangle_scalar, vertex_scalar);
 }
 

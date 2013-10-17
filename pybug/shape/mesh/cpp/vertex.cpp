@@ -7,43 +7,43 @@
 
 Vertex::Vertex(Mesh* mesh_in, unsigned vertex_id):
                MeshAttribute(mesh_in, vertex_id) {
-	std::cout << this << " - constructor" << std::endl;
+	//std::cout << this << " - constructor" << std::endl;
 }
 
 Vertex::~Vertex() {
-	std::cout << this << " - destructor" << std::endl;
+	//std::cout << this << " - destructor" << std::endl;
     halfedges.clear();
 }
 
 void Vertex::add_halfedge(HalfEdge* halfedge) {
-	std::cout << this << " - added " << halfedge << std::endl;
+	//std::cout << this << " - added " << halfedge << std::endl;
     halfedges.insert(halfedge);
 }
 
 void Vertex::add_triangle(Triangle* triangle) {
-	std::cout << this << " - added " << triangle << std::endl;
+	//std::cout << this << " - added " << triangle << std::endl;
     triangles.insert(triangle);
 }
 
 void Vertex::add_vertex(Vertex* vertex) {
-	std::cout << this << " - added " << vertex << std::endl;
+	//std::cout << this << " - added " << vertex << std::endl;
     vertices.insert(vertex);
 }
 
 void Vertex::remove_halfedge(HalfEdge* halfedge) {
-	std::cout << this << " - removed " << halfedge << std::endl;
+	//std::cout << this << " - removed " << halfedge << std::endl;
     halfedges.erase(halfedge);
 }
 
 HalfEdge* Vertex::halfedge_on_triangle(Triangle* triangle) {
-	std::cout << this << " - trying to find " << triangle < ".. ";
+	//std::cout << this << " - trying to find " << triangle << ".. ";
     std::set<HalfEdge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
         if((*he)->triangle == triangle) {
-            std::cout << "found! Joined by " << (*he) << std::endl;
+            //std::cout << "found! Joined by " << (*he) << std::endl;
             return *he;
         }
-	std::cout << "not found" << std::endl;
+	//std::cout << "not found" << std::endl;
     return NULL;
 }
 
@@ -176,3 +176,4 @@ void Vertex::test_contiguous(std::set<Vertex*>* vertices_not_visited) {
         if (vertices_not_visited->erase(*v))
             (*v)->test_contiguous(vertices_not_visited);
 }
+

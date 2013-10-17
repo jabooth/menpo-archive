@@ -51,9 +51,9 @@ class Mesh
         unsigned n_fulledges;
         unsigned n_halfedges;
         // storage for the c++ objects for each triangle and vertex
-        std::vector<Triangle*> triangles;
-        std::vector<Vertex*> vertices;
-        std::set<HalfEdge*> edges;
+        std::vector<Triangle*>* triangles;
+        std::vector<Vertex*>* vertices;
+        std::set<HalfEdge*>* edges;
 
         void add_edge(HalfEdge* halfedge);
         void generate_edge_index(unsigned* edgeIndex);

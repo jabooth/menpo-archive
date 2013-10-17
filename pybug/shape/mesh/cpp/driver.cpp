@@ -1,9 +1,16 @@
 #include "mesh.h"
+#include <fstream>
 
 int main() {
-    unsigned n_triangles = 2;
-    unsigned n_vertices = 4;
-    unsigned trilist[] = {0,1,3,2,1,3};
-    Mesh mesh(trilist, n_triangles, n_vertices);
+    std::fstream trilist_data("/home/jab08/trilist.txt");
+    unsigned n_triangles, n_vertices, tl_i;
+    trilist_data >> n_triangles;
+    trilist_data >> n_vertices;
+    std::vector<unsigned> trilist;
+    while (trilist_data >> tl_i)
+        trilist.push_back(tl_i);
+    Mesh mesh(&trilist[0], n_triangles, n_vertices);
+    mesh.verify_mesh();
     return 0;
 }
+

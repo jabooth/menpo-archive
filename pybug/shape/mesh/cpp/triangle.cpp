@@ -7,7 +7,7 @@
 
 Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0_in,
         Vertex* v1_in, Vertex* v2_in) : MeshAttribute(mesh_in, tri_id) {
-	std::cout << this << " - constructor" << std::endl;
+	//std::cout << this << " - constructor" << std::endl;
     v0 = v0_in;
     v1 = v1_in;
     v2 = v2_in;
@@ -32,10 +32,20 @@ HalfEdge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
     v1->add_vertex(v0);
     HalfEdge* halfedge = new HalfEdge(this->mesh, v0, v1, v2, this, halfedge_id);
     v0->add_halfedge(halfedge);
-    return halfedge;
+    //if (!v0->halfedge_to_vertex(v1))
+    //    std::cout << "just added a halfedge that I cannot find" << std::endl;
+   return halfedge;
 }
 
 void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
+    //std::cout << this << " - chirality error against ";
+    //if (e0_bad)
+    //    std::cout << e0->other_triangle() << " with " << e0 << "/" << e0->paired_halfedge();
+    //if (e1_bad)
+    //    std::cout << e1->other_triangle() << " with " << e1 << "/" << e1->paired_halfedge();
+    //if (e2_bad)
+    //    std::cout << e2->other_triangle() << " with " << e2 << "/" << e2->paired_halfedge();
+    ////std::cout << std::endl;
     // temporarily store the connecting pointers to other regions
     HalfEdge *h0, *h1, *h2;
     // store out the current e0,e1,e2 (their meaning will change with the flip
@@ -71,15 +81,15 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
 
 Triangle::~Triangle() {}
 
-Triangle* Triangle::t0(){
+Triangle* Triangle::t0() {
     return e0->other_triangle();
 }
 
-Triangle* Triangle::t1(){
+Triangle* Triangle::t1() {
     return e1->other_triangle();
 }
 
-Triangle* Triangle::t2(){
+Triangle* Triangle::t2() {
     return e2->other_triangle();
 }
 
@@ -93,15 +103,17 @@ std::set<Triangle *> Triangle::adjacent_triangles() {
 }
 
 void Triangle::flipContiguousRegion() {
-    std::set<Triangle*> visited_tris;
-    visited_tris.insert(this);
+    std::set<Triangle*>* visited_tris = new std::set<Triangle*>;
+    visited_tris->insert(this);
     // call recursive flip on ourselves
-    this->recursiveFlip(&visited_tris);
+    this->recursiveFlip(visited_tris);
+    // all done - clean up the memory
+    delete visited_tris;
 }
 
-void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris){
+void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
     visited_tris->insert(this);  // add myself to the list
-    //std::cout << "Calling recursive flip on T" << id << std::endl;
+    //std::cout << this << " - recursive flip" << std::endl;
     // flip the meaning of each half edge around.
     e0->flip();
     e1->flip();
@@ -117,8 +129,8 @@ void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris){
     e1 = e2;
     e2 = e1_temp;
     // update the id's on the halfedges themselves to be correct
-    e1->id = 1;
-    e2->id = 2;
+    e1->id++; // e1 -> e2
+    e2->id--; // e2 -> e1
     // get each neighbouring triangle, other than the one who called us
     std::set<Triangle*> adjacent_tris = adjacent_triangles();
     std::set<Triangle*>::iterator it;
