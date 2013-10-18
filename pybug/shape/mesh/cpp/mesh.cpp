@@ -32,7 +32,7 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
         // build a new triangle passing in the pointers to the vertices it will
         // be made from (the triangle in it's construction will build edges and
         // connect them)
-        triangles->push_back(new Triangle(this, i, (*vertices)[l], 
+        triangles->push_back(new Triangle(this, i, (*vertices)[l],
                     (*vertices)[m], (*vertices)[n]));
     }
 }
@@ -71,11 +71,11 @@ void Mesh::verify_mesh() {
 }
 
 void Mesh::test_chiral_consistency() {
-    //std::cout << "CHIRALCONSISTENCY: ";
-    std::set<HalfEdge*>::iterator edge;
-    bool pass = true;
+    std::cout << "CHIRALCONSISTENCY: " << std::endl;
     unsigned fulledges_encountered = 0;
     unsigned halfedges_encountered = 0;
+    unsigned incorrectly_paired = 0;
+    std::set<HalfEdge*>::iterator edge;
     for (edge = edges->begin(); edge != edges->end(); edge++) {
         halfedges_encountered++;
         if ((*edge)->part_of_fulledge()) {
@@ -83,36 +83,41 @@ void Mesh::test_chiral_consistency() {
             halfedges_encountered++;
             if ((*edge)->paired_halfedge()->v1 != (*edge)->v0 ||
                     (*edge)->paired_halfedge()->v0 != (*edge)->v1) {
-                pass = false;
+                incorrectly_paired++;
+                std::cout << "ERROR: " << (*edge) << " (" << (*edge)->v0
+                    << "-" << (*edge)->v1 << ") is paired with " << (*edge)->paired_halfedge()
+                    << " (" << (*edge)->paired_halfedge()->v0 << " - " << (*edge)->paired_halfedge()->v1
+                    << ")" << std::endl;
             }
         }
     }
-    if (pass) {
-        //std::cout << "PASS" << std::endl;
+    if (incorrectly_paired == 0) {
+        std::cout << "PASS" << std::endl;
     }
     else {
-        //std::cout << "FAIL" << std::endl;
+        std::cout << "FAIL ("  << incorrectly_paired
+            << " incorrect halfedge pairings)" << std::endl;
     }
-    //std::cout << "EDGECOUNT: ";
+    std::cout << "EDGECOUNT: ";
     if (fulledges_encountered == n_fulledges &&
             halfedges_encountered == n_halfedges) {
-        //std::cout << "PASS" << std::endl;
+        std::cout << "PASS" << std::endl;
     }
     else {
-        //std::cout << "FAIL" << std::endl;
+        std::cout << "FAIL" << std::endl;
     }
 }
 
 void Mesh::test_contiguous() {
     std::vector< std::set<Vertex*> > vertices_per_region = contiguous_regions();
     size_t regions_count = vertices_per_region.size();
-    //std::cout << "Vertices are grouped into " <<
-        //regions_count << " contiguous region(s)." << std::endl;
+    std::cout << "Vertices are grouped into " <<
+        regions_count << " contiguous region(s)." << std::endl;
     if (regions_count > 1) {
         size_t largest_region = (*vertices_per_region.begin()).size();
         int region_pc= int((100.0 * largest_region) / n_vertices);
-        //std::cout << "The largest contiguous region acounts for approximatey "
-        //    << region_pc << "\% of the mesh." << std::endl;
+        std::cout << "The largest contiguous region acounts for approximatey "
+            << region_pc << "\% of the mesh." << std::endl;
     }
 }
 

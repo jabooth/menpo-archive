@@ -28,6 +28,7 @@ class Vertex : public MeshAttribute
         HalfEdge* halfedge_on_triangle(Triangle* triangle);
         HalfEdge* halfedge_to_vertex(Vertex* vertex);
         HalfEdge* halfedge_to_or_from_vertex(Vertex* vertex);
+        bool legal_attachment_to_triangle(Triangle& t);
 
         // algorithms
         void laplacian(unsigned* i_sparse, unsigned* j_sparse, double* v_sparse,

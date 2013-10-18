@@ -10,6 +10,17 @@ Vertex::Vertex(Mesh* mesh_in, unsigned vertex_id):
 	//std::cout << this << " - constructor" << std::endl;
 }
 
+bool Vertex::legal_attachment_to_triangle(Triangle& t) {
+    // There should be only one halfedge per vertex-triangle.
+    // true iff this vertex has exactly one halfedge to t
+    unsigned count = 0;
+    std::set<HalfEdge*>::iterator he;
+    for(he = halfedges.begin(); he != halfedges.end(); he++)
+        if ((*he)->triangle == &t)
+            count++;
+    return (count == 1);
+}
+
 Vertex::~Vertex() {
 	//std::cout << this << " - destructor" << std::endl;
     halfedges.clear();

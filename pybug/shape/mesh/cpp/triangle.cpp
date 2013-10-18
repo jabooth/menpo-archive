@@ -16,6 +16,12 @@ Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0_in,
     bool e0_bad = v0->halfedge_to_vertex(v1) ? 1 : 0;
     bool e1_bad = v1->halfedge_to_vertex(v2) ? 1 : 0;
     bool e2_bad = v2->halfedge_to_vertex(v0) ? 1 : 0;
+    if (e0_bad && v1->halfedge_to_vertex(v0))
+        std::cout << this << " - problem0." << std::endl;
+    if (e1_bad && v2->halfedge_to_vertex(v1))
+        std::cout << this << " - problem1." << std::endl;
+    if (e2_bad && v0->halfedge_to_vertex(v2))
+        std::cout << this << " - problem2." << std::endl;
     // create all the new halfedges.
     e0 = createHalfedge(v0, v1, v2, 0);
     e1 = createHalfedge(v1, v2, v0, 1);
@@ -23,6 +29,12 @@ Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0_in,
     // deal with any that need flipping
     if (e0_bad || e1_bad || e2_bad)
         resolveChirality(e0_bad, e1_bad, e2_bad);
+    // now, we should definitely have a well formed triangle.
+    // lets check...
+    if (!(v0->legal_attachment_to_triangle(*this) &&
+          v1->legal_attachment_to_triangle(*this) &&
+          v2->legal_attachment_to_triangle(*this)))
+        std::cout << this << " has a vertex error." << std::endl;
 }
 
 HalfEdge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,

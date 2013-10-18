@@ -1,4 +1,5 @@
 # distutils: language = c++
+# distutils: extra_compile_args = -std=c++11
 # distutils: sources = ./pybug/shape/mesh/cpp/mesh.cpp ./pybug/shape/mesh/cpp/vertex.cpp ./pybug/shape/mesh/cpp/halfedge.cpp ./pybug/shape/mesh/cpp/triangle.cpp
 
 from libcpp.vector cimport vector

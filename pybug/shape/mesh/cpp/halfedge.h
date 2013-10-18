@@ -33,4 +33,8 @@ class HalfEdge : public MeshAttribute
         friend std::ostream& operator<<(std::ostream& out, const HalfEdge* h) {
             return out << "H" << (h->id/3) << ":" << h->id % 3;
         }
+        friend bool operator==(const HalfEdge& he1, const HalfEdge& he2) {
+            return (he1.v0 == he2.v0 && he1.v1 == he2.v1 &&
+                    he1.v2 == he2.v2 && he1.triangle == he2.triangle);
+        }
 };
