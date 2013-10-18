@@ -5,7 +5,7 @@
 #include "vertex.h"
 
 
-HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
+Halfedge::Halfedge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
                    Vertex* v2_in, Triangle* triangle_in,
                    unsigned tri_halfedge_id) :
                    MeshAttribute(mesh_in, tri_halfedge_id) {
@@ -18,7 +18,7 @@ HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
     this->set_id(3 * triangle->get_id() + tri_halfedge_id);
     //std::cout << this << " - constructor"<< std::endl;
     // attach up halfedges and increase mesh counts for edges/halfedges
-    HalfEdge* halfedge = v1->halfedge_to_vertex(v0);
+    Halfedge* halfedge = v1->halfedge_to_vertex(v0);
     if (!halfedge) {
         // try the other way. Note that this is now a broken halfedge, which
         // the triangle who constructed me will have to detect and fix.
@@ -45,13 +45,13 @@ HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
     }
 }
 
-HalfEdge::~HalfEdge(){}
+Halfedge::~Halfedge(){}
 
-HalfEdge* HalfEdge::paired_halfedge() const {
+Halfedge* Halfedge::paired_halfedge() const {
     return paired_halfedge_;
 }
 
-void HalfEdge::set_paired_halfedge(HalfEdge* value) {
+void Halfedge::set_paired_halfedge(Halfedge* value) {
     //if (value)
     //    std::cout << this << " - set paired HE to " << value << std::endl;
     //else
@@ -59,19 +59,19 @@ void HalfEdge::set_paired_halfedge(HalfEdge* value) {
     paired_halfedge_ = value;
 }
 
-bool HalfEdge::part_of_fulledge() {
+bool Halfedge::part_of_fulledge() {
     return paired_halfedge() != NULL;
 }
 
-Triangle* HalfEdge::other_triangle() {
+Triangle* Halfedge::other_triangle() {
     return this->part_of_fulledge() ? paired_halfedge()->triangle : NULL;
 }
 
-HalfEdge* HalfEdge::ccw_around_tri() {
+Halfedge* Halfedge::ccw_around_tri() {
     return v1->halfedge_on_triangle(triangle);
 }
 
-void HalfEdge::flip() {
+void Halfedge::flip() {
     //std::cout << this << " flipping" << std::endl;
     // fix up the vertex halfedge connectivity
     v0->remove_halfedge(this);
@@ -82,7 +82,7 @@ void HalfEdge::flip() {
     v1 = v_temp;
 }
 
-double HalfEdge::length() {
+double Halfedge::length() {
     // TODO actually calculate this
     //std::cout << "This isn't actually calculating the length" << std::endl;
     return 1.0;

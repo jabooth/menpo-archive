@@ -5,7 +5,7 @@
 
 class Triangle;
 class Vertex;
-class HalfEdge;
+class Halfedge;
 
 enum LaplacianWeightType {combinatorial, distance};
 
@@ -52,10 +52,10 @@ class Mesh {
         // storage for the c++ objects for each triangle and vertex
         std::vector<Triangle*>* triangles;
         std::vector<Vertex*>* vertices;
-        std::set<HalfEdge*>* edges; // only one per edge, no grouping
-        std::set<HalfEdge*>* halfedges;
+        std::set<Halfedge*>* edges; // only one per edge, no grouping
+        std::set<Halfedge*>* halfedges;
 
-        void add_edge(HalfEdge* halfedge);
+        void add_edge(Halfedge* halfedge);
         void generate_edge_index(unsigned* edgeIndex);
 
         // general reductions between vertices/triangles/edges/halfedges

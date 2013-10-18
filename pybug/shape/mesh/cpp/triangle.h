@@ -3,14 +3,14 @@
 #include "mesh.h"
 
 class Vertex;
-class HalfEdge;
+class Halfedge;
 
 class Triangle : public MeshAttribute
 {
     private:
         // repairs damaged chiral meshes (ensures all faces point same way)
         void resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad);
-        HalfEdge* createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
+        Halfedge* createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
                                  unsigned halfedge_id);
         void recursiveFlip(std::set<Triangle*>* visited_tris);
 
@@ -19,7 +19,7 @@ class Triangle : public MeshAttribute
         Vertex *v0, *v1, *v2;
         // the corresponding half edges for this triangle
         // (note v0->-e0->-v1->-e1->v2->-e2->v0)
-        HalfEdge *e0, *e1, *e2;
+        Halfedge *e0, *e1, *e2;
         Triangle(Mesh* mesh, unsigned id, Vertex* v0, Vertex* v1, Vertex* v2);
         ~Triangle();
 

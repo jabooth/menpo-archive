@@ -37,12 +37,12 @@ Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0_in,
         std::cout << this << " has a vertex error." << std::endl;
 }
 
-HalfEdge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
+Halfedge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
                                    unsigned halfedge_id) {
     v0->add_triangle(this);
     v0->add_vertex(v1);
     v1->add_vertex(v0);
-    HalfEdge* halfedge = new HalfEdge(this->get_mesh(), v0, v1, v2, this, halfedge_id);
+    Halfedge* halfedge = new Halfedge(this->get_mesh(), v0, v1, v2, this, halfedge_id);
     v0->add_halfedge(halfedge);
     //if (!v0->halfedge_to_vertex(v1))
     //    std::cout << "just added a halfedge that I cannot find" << std::endl;
@@ -59,11 +59,11 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
     //    std::cout << e2->other_triangle() << " with " << e2 << "/" << e2->paired_halfedge();
     ////std::cout << std::endl;
     // temporarily store the connecting pointers to other regions
-    HalfEdge *h0, *h1, *h2;
+    Halfedge *h0, *h1, *h2;
     // store out the current e0,e1,e2 (their meaning will change with the flip
     // - we just want to ensure that the correct edges get wired up at the
     // end!)
-    HalfEdge *orig_e0, *orig_e1, *orig_e2;
+    Halfedge *orig_e0, *orig_e1, *orig_e2;
     orig_e0 = e0;
     orig_e1 = e1;
     orig_e2 = e2;
@@ -137,7 +137,7 @@ void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
     v0 = v1;
     v1 = v0_temp;
     // make sure e0, e1, e2 have the correct meaning by flipping e1, e2
-    HalfEdge *e1_temp = e1;
+    Halfedge *e1_temp = e1;
     e1 = e2;
     e2 = e1_temp;
     // update the get_id()'s on the halfedges themselves to be correct
@@ -168,9 +168,9 @@ void Triangle::reduce_scalar_per_vertex_to_vertices(
 
 void Triangle::status() {
     std::cout << "    TRIANGLE " << get_id() << "        " << std::endl;
-    HalfEdge* h01 = v0->halfedge_on_triangle(this);
-    HalfEdge* h12 = v1->halfedge_on_triangle(this);
-    HalfEdge* h20 = v2->halfedge_on_triangle(this);
+    Halfedge* h01 = v0->halfedge_on_triangle(this);
+    Halfedge* h12 = v1->halfedge_on_triangle(this);
+    Halfedge* h20 = v2->halfedge_on_triangle(this);
     unsigned width = 12;
     std::cout  << std::setw(width) << "V0(" << v0->get_id() << ")";
     if (h01->part_of_fulledge()) {

@@ -14,7 +14,7 @@ bool Vertex::legal_attachment_to_triangle(Triangle& t) {
     // There should be only one halfedge per vertex-triangle.
     // true iff this vertex has exactly one halfedge to t
     unsigned count = 0;
-    std::set<HalfEdge*>::iterator he;
+    std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
         if ((*he)->triangle == &t)
             count++;
@@ -26,7 +26,7 @@ Vertex::~Vertex() {
     halfedges.clear();
 }
 
-void Vertex::add_halfedge(HalfEdge* halfedge) {
+void Vertex::add_halfedge(Halfedge* halfedge) {
 	//std::cout << this << " - added " << halfedge << std::endl;
     halfedges.insert(halfedge);
 }
@@ -41,14 +41,14 @@ void Vertex::add_vertex(Vertex* vertex) {
     vertices.insert(vertex);
 }
 
-void Vertex::remove_halfedge(HalfEdge* halfedge) {
+void Vertex::remove_halfedge(Halfedge* halfedge) {
 	//std::cout << this << " - removed " << halfedge << std::endl;
     halfedges.erase(halfedge);
 }
 
-HalfEdge* Vertex::halfedge_on_triangle(Triangle* triangle) {
+Halfedge* Vertex::halfedge_on_triangle(Triangle* triangle) {
 	//std::cout << this << " - trying to find " << triangle << ".. ";
-    std::set<HalfEdge*>::iterator he;
+    std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
         if((*he)->triangle == triangle) {
             //std::cout << "found! Joined by " << (*he) << std::endl;
@@ -58,16 +58,16 @@ HalfEdge* Vertex::halfedge_on_triangle(Triangle* triangle) {
     return NULL;
 }
 
-HalfEdge* Vertex::halfedge_to_vertex(Vertex* vertex) {
-    std::set<HalfEdge*>::iterator he;
+Halfedge* Vertex::halfedge_to_vertex(Vertex* vertex) {
+    std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
         if((*he)->v1 == vertex)
             return *he;
     return NULL;
 }
 
-HalfEdge* Vertex::halfedge_to_or_from_vertex(Vertex* vertex) {
-    HalfEdge* he = halfedge_to_vertex(vertex);
+Halfedge* Vertex::halfedge_to_or_from_vertex(Vertex* vertex) {
+    Halfedge* he = halfedge_to_vertex(vertex);
     if (he == NULL)
         he = vertex->halfedge_to_vertex(this);  // try the other way...
     // he could be NULL or a genuine HalfEdge* - either way, return it
@@ -85,7 +85,7 @@ void Vertex::laplacian(unsigned* i_sparse, unsigned* j_sparse,
         unsigned j = (*v)->get_id();
         //if(i < j)
         //{
-        HalfEdge* he = halfedge_to_or_from_vertex(*v);
+        Halfedge* he = halfedge_to_or_from_vertex(*v);
         double w_ij = 0;
         switch(weight_type) {
             case distance:
@@ -112,7 +112,7 @@ void Vertex::laplacian(unsigned* i_sparse, unsigned* j_sparse,
     }
 }
 
-double Vertex::laplacian_distance_weight(HalfEdge* he) {
+double Vertex::laplacian_distance_weight(Halfedge* he) {
     double length = he->length();
     return 1.0/(length*length);
 }
@@ -124,7 +124,7 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
     std::set<Vertex*>::iterator v;
     for(v = vertices.begin(); v != vertices.end(); v++) {
         unsigned j = (*v)->get_id();
-        HalfEdge* he = halfedge_to_or_from_vertex(*v);
+        Halfedge* he = halfedge_to_or_from_vertex(*v);
         double w_ij = cot_per_tri_vertex[(he->triangle->get_id()*3) + he->v2_tri_i];
         if (he->part_of_fulledge()) {
             w_ij += cot_per_tri_vertex[(he->paired_halfedge()->triangle->get_id()*3) +
@@ -142,7 +142,7 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
 }
 
 void Vertex::verify_halfedge_connectivity() {
-    std::set<HalfEdge*>::iterator he;
+    std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++) {
         Triangle* triangle = (*he)->triangle;
         Vertex* t_v0 = triangle->v0;
@@ -166,7 +166,7 @@ void Vertex::verify_halfedge_connectivity() {
 
 void Vertex::status() {
     std::cout << "V" << get_id() << std::endl;
-    std::set<HalfEdge*>::iterator he;
+    std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++) {
         std::cout << "|" ;
         if ((*he)->part_of_fulledge())

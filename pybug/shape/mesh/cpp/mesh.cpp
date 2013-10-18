@@ -14,7 +14,8 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
     triangles->reserve(n_tris_in);
     vertices = new std::vector<Vertex*>;
     vertices->reserve(n_vertices_in);
-    edges = new std::set<HalfEdge*>;
+    edges = new std::set<Halfedge*>;
+    halfedges = new std::set<Halfedge*>;
     n_vertices = n_vertices_in;
     n_triangles = n_tris_in;
     // set the no. of full/half edges to 0
@@ -37,12 +38,12 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
     }
 }
 
-void Mesh::add_edge(HalfEdge* halfedge) {
+void Mesh::add_edge(Halfedge* halfedge) {
     edges->insert(halfedge);
 }
 
 void Mesh::generate_edge_index(unsigned* edge_index) {
-    std::set<HalfEdge*>::iterator he;
+    std::set<Halfedge*>::iterator he;
     unsigned count = 0;
     for(he = edges->begin(); he != edges->end(); he++, count++)
     {
@@ -59,6 +60,7 @@ Mesh::~Mesh() {
     delete triangles;
     delete vertices;
     delete edges;
+    delete halfedges;
 }
 
 void Mesh::verify_mesh() {
@@ -75,7 +77,7 @@ void Mesh::test_chiral_consistency() {
     unsigned fulledges_encountered = 0;
     unsigned halfedges_encountered = 0;
     unsigned incorrectly_paired = 0;
-    std::set<HalfEdge*>::iterator edge;
+    std::set<Halfedge*>::iterator edge;
     for (edge = edges->begin(); edge != edges->end(); edge++) {
         halfedges_encountered++;
         if ((*edge)->part_of_fulledge()) {
