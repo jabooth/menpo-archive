@@ -79,14 +79,17 @@ class Mesh {
 
 
 class MeshAttribute {
-    Mesh* mesh_;
+
+private:
+	Mesh* mesh_;
     unsigned id_;
+	void set_mesh(Mesh* mesh);
 
 public:
 	MeshAttribute(Mesh* mesh, unsigned id);
 	unsigned get_id() const;
-	void set_id(unsigned id);
 	Mesh* get_mesh() const;
-	void set_mesh(Mesh* mesh);
+    void set_id(unsigned id);
+
 };
 

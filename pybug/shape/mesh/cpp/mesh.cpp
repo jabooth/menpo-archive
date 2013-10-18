@@ -47,8 +47,8 @@ void Mesh::generate_edge_index(unsigned* edge_index) {
     unsigned count = 0;
     for(he = edges->begin(); he != edges->end(); he++, count++)
     {
-        edge_index[count*2]     = (*he)->v0->get_id();
-        edge_index[count*2 + 1] = (*he)->v1->get_id();
+        edge_index[count*2]     = (*he)->get_v_a()->get_id();
+        edge_index[count*2 + 1] = (*he)->get_v_b()->get_id();
     }
 }
 
@@ -83,12 +83,12 @@ void Mesh::test_chiral_consistency() {
         if ((*edge)->part_of_fulledge()) {
             fulledges_encountered++;
             halfedges_encountered++;
-            if ((*edge)->paired_halfedge()->v1 != (*edge)->v0 ||
-                    (*edge)->paired_halfedge()->v0 != (*edge)->v1) {
+            if ((*edge)->get_paired_halfedge()->get_v_b() != (*edge)->get_v_a() ||
+                    (*edge)->get_paired_halfedge()->get_v_a() != (*edge)->get_v_b()) {
                 incorrectly_paired++;
-                std::cout << "ERROR: " << (*edge) << " (" << (*edge)->v0
-                    << "-" << (*edge)->v1 << ") is paired with " << (*edge)->paired_halfedge()
-                    << " (" << (*edge)->paired_halfedge()->v0 << " - " << (*edge)->paired_halfedge()->v1
+                std::cout << "ERROR: " << (*edge) << " (" << (*edge)->get_v_a()
+                    << "-" << (*edge)->get_v_b() << ") is paired with " << (*edge)->get_paired_halfedge()
+                    << " (" << (*edge)->get_paired_halfedge()->get_v_a() << " - " << (*edge)->get_paired_halfedge()->get_v_b()
                     << ")" << std::endl;
             }
         }

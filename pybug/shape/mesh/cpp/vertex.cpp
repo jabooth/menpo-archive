@@ -61,7 +61,7 @@ Halfedge* Vertex::halfedge_on_triangle(Triangle* triangle) {
 Halfedge* Vertex::halfedge_to_vertex(Vertex* vertex) {
     std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
-        if((*he)->v1 == vertex)
+        if((*he)->get_v_b() == vertex)
             return *he;
     return NULL;
 }
@@ -127,8 +127,8 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
         Halfedge* he = halfedge_to_or_from_vertex(*v);
         double w_ij = cot_per_tri_vertex[(he->triangle->get_id()*3) + he->v2_tri_i];
         if (he->part_of_fulledge()) {
-            w_ij += cot_per_tri_vertex[(he->paired_halfedge()->triangle->get_id()*3) +
-                he->paired_halfedge()->v2_tri_i];
+            w_ij += cot_per_tri_vertex[(he->get_paired_halfedge()->triangle->get_id()*3) +
+                he->get_paired_halfedge()->v2_tri_i];
         }
         else {
             //w_ij += w_ij;
@@ -151,14 +151,14 @@ void Vertex::verify_halfedge_connectivity() {
         if(t_v0 != this && t_v1 != this && t_v2 != this)
             std::cout << "this halfedge does not live on it's triangle!"
                 << std::endl;
-        if((*he)->v0 != this)
+        if((*he)->get_v_a() != this)
             std::cout << "half edge errornously connected" << std::endl;
-        if((*he)->ccw_around_tri()->ccw_around_tri()->v1 != (*he)->v0)
+        if((*he)->ccw_around_tri()->ccw_around_tri()->get_v_b() != (*he)->get_v_a())
             std::cout << "cannie spin raarnd the triangle like man!"
                 << std::endl;
         if((*he)->part_of_fulledge()) {
-            if((*he)->paired_halfedge()->v0 != (*he)->v1 ||
-               (*he)->paired_halfedge()->v1 != (*he)->v0)
+            if((*he)->get_paired_halfedge()->get_v_a() != (*he)->get_v_b() ||
+               (*he)->get_paired_halfedge()->get_v_b() != (*he)->get_v_a())
                 std::cout << "T" << triangle->get_id() << " H:" << (*he)->get_id() << std::endl;
         }
     }
@@ -173,10 +173,10 @@ void Vertex::status() {
             std::cout << "=";
         else
             std::cout << "-";
-        std::cout << "V" << (*he)->v1->get_id();
+        std::cout << "V" << (*he)->get_v_b()->get_id();
         std::cout << " (T" << (*he)->triangle->get_id();
         if ((*he)->part_of_fulledge())
-            std::cout << "=T" << (*he)->paired_halfedge()->triangle->get_id();
+            std::cout << "=T" << (*he)->get_paired_halfedge()->triangle->get_id();
         std::cout << ")" << std::endl;
     }
 }

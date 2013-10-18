@@ -70,13 +70,13 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
     // detach any bad halfedges so we don't recursively flip onto a 'good' set
     // of triangles
     if (e0_bad) {
-        h0 = e0->paired_halfedge();
+        h0 = e0->get_paired_halfedge();
         e0->set_paired_halfedge(NULL);
     } if (e1_bad) {
-        h1 = e1->paired_halfedge();
+        h1 = e1->get_paired_halfedge();
         e1->set_paired_halfedge(NULL);
     } if (e2_bad) {
-        h2 = e2->paired_halfedge();
+        h2 = e2->get_paired_halfedge();
         e2->set_paired_halfedge(NULL);
     }
     // call flip on myself, flipping myself and all my neighbours.
@@ -197,21 +197,21 @@ void Triangle::status() {
 
     std::cout  << std::setw(width) << " ";
     if (h01->part_of_fulledge()) {
-        std::cout  << std::setw(width) << h01->paired_halfedge()->triangle->get_id();
+        std::cout  << std::setw(width) << h01->get_paired_halfedge()->triangle->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h12->part_of_fulledge()) {
-        std::cout << std::setw(width) << h12->paired_halfedge()->triangle->get_id();
+        std::cout << std::setw(width) << h12->get_paired_halfedge()->triangle->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h20->part_of_fulledge()) {
-        std::cout << std::setw(width) << h20->paired_halfedge()->triangle->get_id();
+        std::cout << std::setw(width) << h20->get_paired_halfedge()->triangle->get_id();
     }
     else {
         std::cout << " -- ";
