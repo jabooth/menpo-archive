@@ -7,6 +7,9 @@ class Halfedge;
 
 class Triangle : public MeshAttribute {
 private:
+    Vertex *v0_, *v1_, *v2_;
+    Halfedge *e0_, *e1_, *e2_;
+
     // repairs damaged chiral meshes (ensures all faces point same way)
     void resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad);
     Halfedge* createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
@@ -15,14 +18,26 @@ private:
 
 
 public:
-    Vertex *v0, *v1, *v2;
-    // the corresponding half edges for this triangle
-    // (note v0->-e0->-v1->-e1->v2->-e2->v0)
-    Halfedge *e0, *e1, *e2;
     Triangle(Mesh* mesh, unsigned id, Vertex* v0, Vertex* v1, Vertex* v2);
     ~Triangle();
 
-    // accessing
+    // accessors
+    Vertex* get_v0();
+    Vertex* get_v1();
+    Vertex* get_v2();
+    void set_v0(Vertex* value);
+    void set_v1(Vertex* value);
+    void set_v2(Vertex* value);
+
+    // the corresponding half edges for this triangle
+    // (note v0->-e0->-v1->-e1->v2->-e2->v0)
+    Halfedge* get_e0();
+    Halfedge* get_e1();
+    Halfedge* get_e2();
+    void set_e0(Halfedge* value);
+    void set_e1(Halfedge* value);
+    void set_e2(Halfedge* value);
+
     Triangle* t0();
     Triangle* t1();
     Triangle* t2();

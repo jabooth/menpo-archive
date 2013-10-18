@@ -16,7 +16,7 @@ bool Vertex::legal_attachment_to_triangle(Triangle& t) {
     unsigned count = 0;
     std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
-        if ((*he)->triangle == &t)
+        if ((*he)->tri_ == &t)
             count++;
     return (count == 1);
 }
@@ -50,7 +50,7 @@ Halfedge* Vertex::halfedge_on_triangle(Triangle* triangle) {
 	//std::cout << this << " - trying to find " << triangle << ".. ";
     std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++)
-        if((*he)->triangle == triangle) {
+        if((*he)->tri_ == triangle) {
             //std::cout << "found! Joined by " << (*he) << std::endl;
             return *he;
         }
@@ -125,10 +125,10 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
     for(v = vertices.begin(); v != vertices.end(); v++) {
         unsigned j = (*v)->get_id();
         Halfedge* he = halfedge_to_or_from_vertex(*v);
-        double w_ij = cot_per_tri_vertex[(he->triangle->get_id()*3) + he->v2_tri_i];
+        double w_ij = cot_per_tri_vertex[(he->tri_->get_id()*3) + he->v2_tri_i];
         if (he->part_of_fulledge()) {
-            w_ij += cot_per_tri_vertex[(he->get_paired_halfedge()->triangle->get_id()*3) +
-                he->get_paired_halfedge()->v2_tri_i];
+            w_ij += cot_per_tri_vertex[(he->get_paired_he()->tri_->get_id()*3) +
+                he->get_paired_he()->v2_tri_i];
         }
         else {
             //w_ij += w_ij;
@@ -144,10 +144,10 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
 void Vertex::verify_halfedge_connectivity() {
     std::set<Halfedge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++) {
-        Triangle* triangle = (*he)->triangle;
-        Vertex* t_v0 = triangle->v0;
-        Vertex* t_v1 = triangle->v1;
-        Vertex* t_v2 = triangle->v2;
+        Triangle* triangle = (*he)->tri_;
+        Vertex* t_v0 = triangle->get_v0();
+        Vertex* t_v1 = triangle->get_v1();
+        Vertex* t_v2 = triangle->get_v2();
         if(t_v0 != this && t_v1 != this && t_v2 != this)
             std::cout << "this halfedge does not live on it's triangle!"
                 << std::endl;
@@ -157,8 +157,8 @@ void Vertex::verify_halfedge_connectivity() {
             std::cout << "cannie spin raarnd the triangle like man!"
                 << std::endl;
         if((*he)->part_of_fulledge()) {
-            if((*he)->get_paired_halfedge()->get_v_a() != (*he)->get_v_b() ||
-               (*he)->get_paired_halfedge()->get_v_b() != (*he)->get_v_a())
+            if((*he)->get_paired_he()->get_v_a() != (*he)->get_v_b() ||
+               (*he)->get_paired_he()->get_v_b() != (*he)->get_v_a())
                 std::cout << "T" << triangle->get_id() << " H:" << (*he)->get_id() << std::endl;
         }
     }
@@ -174,9 +174,9 @@ void Vertex::status() {
         else
             std::cout << "-";
         std::cout << "V" << (*he)->get_v_b()->get_id();
-        std::cout << " (T" << (*he)->triangle->get_id();
+        std::cout << " (T" << (*he)->tri_->get_id();
         if ((*he)->part_of_fulledge())
-            std::cout << "=T" << (*he)->get_paired_halfedge()->triangle->get_id();
+            std::cout << "=T" << (*he)->get_paired_he()->tri_->get_id();
         std::cout << ")" << std::endl;
     }
 }

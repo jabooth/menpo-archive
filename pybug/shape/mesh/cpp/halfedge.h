@@ -11,7 +11,7 @@ private:
         Vertex* v_opp_; // opposite vertex on my triangle
 public:
         // accessors
-        Halfedge* get_paired_halfedge() const;
+        Halfedge* get_paired_he() const;
         void set_paired_halfedge(Halfedge* value);
         Vertex* get_v_a() const;
         Vertex* get_v_b() const;
@@ -24,10 +24,10 @@ public:
         int v0_tri_i; // The position no. of each vertex on triangle
         int v1_tri_i; // i.e., if MY v0 is actually the triangle's v1,
         int v2_tri_i; // v0_tri_i == 1, v1_tri_i == 2 ... (always CCW)
-        Triangle* triangle;
-        Triangle* other_triangle();
-        Halfedge(Mesh* mesh, Vertex* v0, Vertex* v1, Vertex* v2,
-                 Triangle* triangle, unsigned int tri_halfedge_id);
+        Triangle* tri_;
+        Triangle* other_tri();
+        Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
+                 Triangle* tri, unsigned tri_he_id);
         ~Halfedge();
         bool part_of_fulledge();
         void flip(); // flip this half edge, fixing up all vertex pointers
@@ -39,6 +39,6 @@ public:
         }
         friend bool operator==(const Halfedge& he1, const Halfedge& he2) {
             return (he1.v_a_ == he2.v_a_ && he1.v_b_ == he2.v_b_ &&
-                    he1.v_opp_ == he2.v_opp_ && he1.triangle == he2.triangle);
+                    he1.v_opp_ == he2.v_opp_ && he1.tri_ == he2.tri_);
         }
 };

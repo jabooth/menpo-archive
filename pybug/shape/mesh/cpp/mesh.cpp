@@ -83,12 +83,12 @@ void Mesh::test_chiral_consistency() {
         if ((*edge)->part_of_fulledge()) {
             fulledges_encountered++;
             halfedges_encountered++;
-            if ((*edge)->get_paired_halfedge()->get_v_b() != (*edge)->get_v_a() ||
-                    (*edge)->get_paired_halfedge()->get_v_a() != (*edge)->get_v_b()) {
+            if ((*edge)->get_paired_he()->get_v_b() != (*edge)->get_v_a() ||
+                    (*edge)->get_paired_he()->get_v_a() != (*edge)->get_v_b()) {
                 incorrectly_paired++;
                 std::cout << "ERROR: " << (*edge) << " (" << (*edge)->get_v_a()
-                    << "-" << (*edge)->get_v_b() << ") is paired with " << (*edge)->get_paired_halfedge()
-                    << " (" << (*edge)->get_paired_halfedge()->get_v_a() << " - " << (*edge)->get_paired_halfedge()->get_v_b()
+                    << "-" << (*edge)->get_v_b() << ") is paired with " << (*edge)->get_paired_he()
+                    << " (" << (*edge)->get_paired_he()->get_v_a() << " - " << (*edge)->get_paired_he()->get_v_b()
                     << ")" << std::endl;
             }
         }

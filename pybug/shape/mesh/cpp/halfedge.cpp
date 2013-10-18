@@ -5,18 +5,16 @@
 #include "vertex.h"
 
 
-Halfedge::Halfedge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
-                   Vertex* v2_in, Triangle* triangle_in,
-                   unsigned tri_halfedge_id) :
-                   MeshAttribute(mesh_in, tri_halfedge_id) {
+Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
+                   Triangle* tri, unsigned tri_he_id) :
+                   MeshAttribute(mesh, tri_he_id) {
     get_mesh()->n_halfedges++;
-    v_a_ = v0_in;
-    v_b_ = v1_in;
-    v_opp_ = v2_in;
-    triangle = triangle_in;
+    v_a_ = a;
+    v_b_ = b;
+    v_opp_ = opposite;
+    tri_ = tri;
     // we need to change our id to be correct - hacky!
-    this->set_id(3 * triangle->get_id() + tri_halfedge_id);
-    //std::cout << this << " - constructor"<< std::endl;
+    set_id(3 * tri_->get_id() + tri_he_id);
     // attach up halfedges and increase mesh counts for edges/halfedges
     Halfedge* halfedge = v_b_->halfedge_to_vertex(v_a_);
     if (!halfedge) {
@@ -40,7 +38,7 @@ Halfedge::Halfedge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
         get_mesh()->n_fulledges++;
     } else {
         // this truly is the first time this edge exists
-        mesh_in->add_edge(this);
+        mesh->add_edge(this);
         set_paired_halfedge(NULL);
     }
 }
@@ -71,7 +69,7 @@ void Halfedge::set_v_opp(Vertex* value) {
 	v_opp_ = value;
 }
 
-Halfedge* Halfedge::get_paired_halfedge() const {
+Halfedge* Halfedge::get_paired_he() const {
     return paired_halfedge_;
 }
 
@@ -80,15 +78,15 @@ void Halfedge::set_paired_halfedge(Halfedge* value) {
 }
 
 bool Halfedge::part_of_fulledge() {
-    return get_paired_halfedge() != NULL;
+    return get_paired_he() != NULL;
 }
 
-Triangle* Halfedge::other_triangle() {
-    return this->part_of_fulledge() ? get_paired_halfedge()->triangle : NULL;
+Triangle* Halfedge::other_tri() {
+    return this->part_of_fulledge() ? get_paired_he()->tri_ : NULL;
 }
 
 Halfedge* Halfedge::ccw_around_tri() {
-    return get_v_b()->halfedge_on_triangle(triangle);
+    return get_v_b()->halfedge_on_triangle(tri_);
 }
 
 void Halfedge::flip() {

@@ -5,37 +5,89 @@
 #include "triangle.h"
 #include "vertex.h"
 
-Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0_in,
-        Vertex* v1_in, Vertex* v2_in) : MeshAttribute(mesh_in, tri_id) {
+Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0,
+        Vertex* v1, Vertex* v2) : MeshAttribute(mesh_in, tri_id) {
 	//std::cout << this << " - constructor" << std::endl;
-    v0 = v0_in;
-    v1 = v1_in;
-    v2 = v2_in;
+    v0_ = v0;
+    v1_ = v1;
+    v2_ = v2;
     // we need to know if any of the edges are going to be flipped when
     // connected up - i.e. do any of these halfedges already exist?
-    bool e0_bad = v0->halfedge_to_vertex(v1) ? 1 : 0;
-    bool e1_bad = v1->halfedge_to_vertex(v2) ? 1 : 0;
-    bool e2_bad = v2->halfedge_to_vertex(v0) ? 1 : 0;
-    if (e0_bad && v1->halfedge_to_vertex(v0))
+    bool e0_bad = v0_->halfedge_to_vertex(v1_) ? 1 : 0;
+    bool e1_bad = v1_->halfedge_to_vertex(v2_) ? 1 : 0;
+    bool e2_bad = v2_->halfedge_to_vertex(v0_) ? 1 : 0;
+    if (e0_bad && v1_->halfedge_to_vertex(v0_))
         std::cout << this << " - problem0." << std::endl;
-    if (e1_bad && v2->halfedge_to_vertex(v1))
+    if (e1_bad && v2_->halfedge_to_vertex(v1_))
         std::cout << this << " - problem1." << std::endl;
-    if (e2_bad && v0->halfedge_to_vertex(v2))
+    if (e2_bad && v0_->halfedge_to_vertex(v2_))
         std::cout << this << " - problem2." << std::endl;
     // create all the new halfedges.
-    e0 = createHalfedge(v0, v1, v2, 0);
-    e1 = createHalfedge(v1, v2, v0, 1);
-    e2 = createHalfedge(v2, v0, v1, 2);
+    e0_ = createHalfedge(v0_, v1_, v2_, 0);
+    e1_ = createHalfedge(v1_, v2_, v0_, 1);
+    e2_ = createHalfedge(v2_, v0_, v1_, 2);
     // deal with any that need flipping
     if (e0_bad || e1_bad || e2_bad)
         resolveChirality(e0_bad, e1_bad, e2_bad);
     // now, we should definitely have a well formed triangle.
     // lets check...
-    if (!(v0->legal_attachment_to_triangle(*this) &&
-          v1->legal_attachment_to_triangle(*this) &&
-          v2->legal_attachment_to_triangle(*this)))
+    if (!(v0_->legal_attachment_to_triangle(*this) &&
+          v1_->legal_attachment_to_triangle(*this) &&
+          v2_->legal_attachment_to_triangle(*this)))
         std::cout << this << " has a vertex error." << std::endl;
 }
+
+Triangle::~Triangle() {}
+
+
+Vertex* Triangle::get_v0() {
+    return v0_;
+}
+
+Vertex* Triangle::get_v1() {
+    return v1_;
+}
+
+Vertex* Triangle::get_v2() {
+    return v2_;
+}
+
+void Triangle::set_v0(Vertex* value) {
+    v0_ = value;
+}
+
+void Triangle::set_v1(Vertex* value) {
+    v1_ = value;
+}
+
+void Triangle::set_v2(Vertex* value) {
+    v2_ = value;
+}
+
+Halfedge* Triangle::get_e0() {
+    return e0_;
+}
+
+Halfedge* Triangle::get_e1() {
+    return e1_;
+}
+
+Halfedge* Triangle::get_e2() {
+    return e2_;
+}
+
+void Triangle::set_e0(Halfedge* value) {
+    e0_ = value;
+}
+
+void Triangle::set_e1(Halfedge* value) {
+    e1_ = value;
+}
+
+void Triangle::set_e2(Halfedge* value) {
+    e2_ = value;
+}
+
 
 Halfedge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
                                    unsigned halfedge_id) {
@@ -64,20 +116,20 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
     // - we just want to ensure that the correct edges get wired up at the
     // end!)
     Halfedge *orig_e0, *orig_e1, *orig_e2;
-    orig_e0 = e0;
-    orig_e1 = e1;
-    orig_e2 = e2;
+    orig_e0 = e0_;
+    orig_e1 = e1_;
+    orig_e2 = e2_;
     // detach any bad halfedges so we don't recursively flip onto a 'good' set
     // of triangles
     if (e0_bad) {
-        h0 = e0->get_paired_halfedge();
-        e0->set_paired_halfedge(NULL);
+        h0 = e0_->get_paired_he();
+        e0_->set_paired_halfedge(NULL);
     } if (e1_bad) {
-        h1 = e1->get_paired_halfedge();
-        e1->set_paired_halfedge(NULL);
+        h1 = e1_->get_paired_he();
+        e1_->set_paired_halfedge(NULL);
     } if (e2_bad) {
-        h2 = e2->get_paired_halfedge();
-        e2->set_paired_halfedge(NULL);
+        h2 = e2_->get_paired_he();
+        e2_->set_paired_halfedge(NULL);
     }
     // call flip on myself, flipping myself and all my neighbours.
     this->flipContiguousRegion();
@@ -91,18 +143,16 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
         orig_e2->set_paired_halfedge(h2);
 }
 
-Triangle::~Triangle() {}
-
 Triangle* Triangle::t0() {
-    return e0->other_triangle();
+    return e0_->other_tri();
 }
 
 Triangle* Triangle::t1() {
-    return e1->other_triangle();
+    return e1_->other_tri();
 }
 
 Triangle* Triangle::t2() {
-    return e2->other_triangle();
+    return e2_->other_tri();
 }
 
 std::set<Triangle *> Triangle::adjacent_triangles() {
@@ -127,22 +177,22 @@ void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
     visited_tris->insert(this);  // add myself to the list
     //std::cout << this << " - recursive flip" << std::endl;
     // flip the meaning of each half edge around.
-    e0->flip();
-    e1->flip();
-    e2->flip();
+    e0_->flip();
+    e1_->flip();
+    e2_->flip();
     // now the state of halfedges and vertices are fixed up, but this triangle
     // is all wrong.
-    // make sure v0, v1, v2 are correct in meaning by flipping v0, v1
-    Vertex *v0_temp = v0;
-    v0 = v1;
-    v1 = v0_temp;
-    // make sure e0, e1, e2 have the correct meaning by flipping e1, e2
-    Halfedge *e1_temp = e1;
-    e1 = e2;
-    e2 = e1_temp;
+    // make sure v0, v1, v2 are correct in meaning by flipping v0, v1_
+    Vertex *v0_temp = v0_;
+    v0_ = v1_;
+    v1_ = v0_temp;
+    // make sure e0, e1, e2 have the correct meaning by flipping e1_, e2_
+    Halfedge *e1_temp = e1_;
+    e1_ = e2_;
+    e2_ = e1_temp;
     // update the get_id()'s on the halfedges themselves to be correct
-    e1->set_id(e1->get_id() + 1); // e1 -> e2
-    e2->set_id(e1->get_id() - 1); // e2 -> e1
+    e1_->set_id(e1_->get_id() + 1); // e1_ -> e2_
+    e2_->set_id(e1_->get_id() - 1); // e2 -> e1
     // get each neighbouring triangle, other than the one who called us
     std::set<Triangle*> adjacent_tris = adjacent_triangles();
     std::set<Triangle*>::iterator it;
@@ -154,64 +204,64 @@ void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
 
 void Triangle::reduce_scalar_to_vertices(double* triangle_scalar,
         double* vertex_scalar) {
-    vertex_scalar[v0->get_id()] += triangle_scalar[get_id()];
-    vertex_scalar[v1->get_id()] += triangle_scalar[get_id() + 1];
-    vertex_scalar[v2->get_id()] += triangle_scalar[get_id() + 2];
+    vertex_scalar[v0_->get_id()] += triangle_scalar[get_id()];
+    vertex_scalar[v1_->get_id()] += triangle_scalar[get_id() + 1];
+    vertex_scalar[v2_->get_id()] += triangle_scalar[get_id() + 2];
 }
 
 void Triangle::reduce_scalar_per_vertex_to_vertices(
         double* triangle_scalar_per_vertex, double* vertex_scalar) {
-    vertex_scalar[v0->get_id()] += triangle_scalar_per_vertex[(get_id() * 3)];
-    vertex_scalar[v1->get_id()] += triangle_scalar_per_vertex[(get_id() * 3) + 1];
-    vertex_scalar[v2->get_id()] += triangle_scalar_per_vertex[(get_id() * 3) + 2];
+    vertex_scalar[v0_->get_id()] += triangle_scalar_per_vertex[(get_id() * 3)];
+    vertex_scalar[v1_->get_id()] += triangle_scalar_per_vertex[(get_id() * 3) + 1];
+    vertex_scalar[v2_->get_id()] += triangle_scalar_per_vertex[(get_id() * 3) + 2];
 }
 
 void Triangle::status() {
     std::cout << "    TRIANGLE " << get_id() << "        " << std::endl;
-    Halfedge* h01 = v0->halfedge_on_triangle(this);
-    Halfedge* h12 = v1->halfedge_on_triangle(this);
-    Halfedge* h20 = v2->halfedge_on_triangle(this);
+    Halfedge* h01 = v0_->halfedge_on_triangle(this);
+    Halfedge* h12 = v1_->halfedge_on_triangle(this);
+    Halfedge* h20 = v2_->halfedge_on_triangle(this);
     unsigned width = 12;
-    std::cout  << std::setw(width) << "V0(" << v0->get_id() << ")";
+    std::cout  << std::setw(width) << "V0(" << v0_->get_id() << ")";
     if (h01->part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
-    std::cout  << std::setw(width) << "V1(" << v1->get_id() << ")";
+    std::cout  << std::setw(width) << "V1(" << v1_->get_id() << ")";
     if (h12->part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
-    std::cout  << std::setw(width) << "V2(" << v2->get_id() << ")";
+    std::cout  << std::setw(width) << "V2(" << v2_->get_id() << ")";
     if (h20->part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
-    std::cout << std::setw(width) << "V0(" << v0->get_id() << ")" << std::endl;
+    std::cout << std::setw(width) << "V0(" << v0_->get_id() << ")" << std::endl;
 
     std::cout  << std::setw(width) << " ";
     if (h01->part_of_fulledge()) {
-        std::cout  << std::setw(width) << h01->get_paired_halfedge()->triangle->get_id();
+        std::cout  << std::setw(width) << h01->get_paired_he()->tri_->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h12->part_of_fulledge()) {
-        std::cout << std::setw(width) << h12->get_paired_halfedge()->triangle->get_id();
+        std::cout << std::setw(width) << h12->get_paired_he()->tri_->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h20->part_of_fulledge()) {
-        std::cout << std::setw(width) << h20->get_paired_halfedge()->triangle->get_id();
+        std::cout << std::setw(width) << h20->get_paired_he()->tri_->get_id();
     }
     else {
         std::cout << " -- ";
