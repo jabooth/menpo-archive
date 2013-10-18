@@ -31,7 +31,7 @@ class HalfEdge : public MeshAttribute
         HalfEdge* ccw_around_tri();
         double length();
         friend std::ostream& operator<<(std::ostream& out, const HalfEdge* h) {
-            return out << "H" << (h->id/3) << ":" << h->id % 3;
+            return out << "H" << ((h->get_id())/3) << ":" << h->get_id() % 3;
         }
         friend bool operator==(const HalfEdge& he1, const HalfEdge& he2) {
             return (he1.v0 == he2.v0 && he1.v1 == he2.v1 &&

@@ -39,9 +39,8 @@ enum LaplacianWeightType {combinatorial, distance};
 // Note that this framework expects all arrays to be allocated to the
 // correct size before method invocation!
 //
-class Mesh
-{
-    public:
+class Mesh {
+	public:
         Mesh(unsigned *tri_index, unsigned n_triangles, unsigned n_vertices);
         ~Mesh();
         // pointer to an array dim(n_verticesx3) containing the coordinates
@@ -53,19 +52,23 @@ class Mesh
         // storage for the c++ objects for each triangle and vertex
         std::vector<Triangle*>* triangles;
         std::vector<Vertex*>* vertices;
-        std::set<HalfEdge*>* edges;
+        std::set<HalfEdge*>* edges; // only one per edge, no grouping
+        std::set<HalfEdge*>* halfedges;
 
         void add_edge(HalfEdge* halfedge);
         void generate_edge_index(unsigned* edgeIndex);
 
-        void laplacian(unsigned* i_sparse, unsigned* j_sparse,
-                double*   v_sparse, LaplacianWeightType weight_type);
-        void cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
-                double*   v_sparse, double* cotangents_per_vertex);
+        // general reductions between vertices/triangles/edges/halfedges
         void reduce_tri_scalar_to_vertices(double* triangle_scalar,
                 double* vertex_scalar);
         void reduce_tri_scalar_per_vertex_to_vertices(
                 double* triangle_scalar_per_vertex, double* vertex_scalar);
+
+        // specialist methods for Laplacian calculations
+        void laplacian(unsigned* i_sparse, unsigned* j_sparse,
+                double*   v_sparse, LaplacianWeightType weight_type);
+        void cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
+                				 double* v_sparse, double* cotans_per_v);
 
         // utilities
         void verify_mesh();
@@ -75,11 +78,15 @@ class Mesh
 };
 
 
-class MeshAttribute
-{
-    public:
-        Mesh *mesh;
-        unsigned id;
-        MeshAttribute(Mesh* mesh, unsigned id);
+class MeshAttribute {
+    Mesh* mesh_;
+    unsigned id_;
+
+public:
+	MeshAttribute(Mesh* mesh, unsigned id);
+	unsigned get_id() const;
+	void set_id(unsigned id);
+	Mesh* get_mesh() const;
+	void set_mesh(Mesh* mesh);
 };
 

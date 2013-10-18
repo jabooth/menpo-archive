@@ -41,8 +41,8 @@ class Triangle : public MeshAttribute
         // utilities
         void status();
         friend std::ostream& operator<<(std::ostream& out, const Triangle* t) {
-            if (t->id)
-                return out << "T" << t->id;
+            if (t->get_id())
+                return out << "T" << t->get_id();
             else
                 return out << "TNULL";
         }

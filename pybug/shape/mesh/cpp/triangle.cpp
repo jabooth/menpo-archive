@@ -42,7 +42,7 @@ HalfEdge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
     v0->add_triangle(this);
     v0->add_vertex(v1);
     v1->add_vertex(v0);
-    HalfEdge* halfedge = new HalfEdge(this->mesh, v0, v1, v2, this, halfedge_id);
+    HalfEdge* halfedge = new HalfEdge(this->get_mesh(), v0, v1, v2, this, halfedge_id);
     v0->add_halfedge(halfedge);
     //if (!v0->halfedge_to_vertex(v1))
     //    std::cout << "just added a halfedge that I cannot find" << std::endl;
@@ -140,9 +140,9 @@ void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
     HalfEdge *e1_temp = e1;
     e1 = e2;
     e2 = e1_temp;
-    // update the id's on the halfedges themselves to be correct
-    e1->id++; // e1 -> e2
-    e2->id--; // e2 -> e1
+    // update the get_id()'s on the halfedges themselves to be correct
+    e1->set_id(e1->get_id() + 1); // e1 -> e2
+    e2->set_id(e1->get_id() - 1); // e2 -> e1
     // get each neighbouring triangle, other than the one who called us
     std::set<Triangle*> adjacent_tris = adjacent_triangles();
     std::set<Triangle*>::iterator it;
@@ -154,64 +154,64 @@ void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
 
 void Triangle::reduce_scalar_to_vertices(double* triangle_scalar,
         double* vertex_scalar) {
-    vertex_scalar[v0->id] += triangle_scalar[id];
-    vertex_scalar[v1->id] += triangle_scalar[id + 1];
-    vertex_scalar[v2->id] += triangle_scalar[id + 2];
+    vertex_scalar[v0->get_id()] += triangle_scalar[get_id()];
+    vertex_scalar[v1->get_id()] += triangle_scalar[get_id() + 1];
+    vertex_scalar[v2->get_id()] += triangle_scalar[get_id() + 2];
 }
 
 void Triangle::reduce_scalar_per_vertex_to_vertices(
         double* triangle_scalar_per_vertex, double* vertex_scalar) {
-    vertex_scalar[v0->id] += triangle_scalar_per_vertex[(id * 3)];
-    vertex_scalar[v1->id] += triangle_scalar_per_vertex[(id * 3) + 1];
-    vertex_scalar[v2->id] += triangle_scalar_per_vertex[(id * 3) + 2];
+    vertex_scalar[v0->get_id()] += triangle_scalar_per_vertex[(get_id() * 3)];
+    vertex_scalar[v1->get_id()] += triangle_scalar_per_vertex[(get_id() * 3) + 1];
+    vertex_scalar[v2->get_id()] += triangle_scalar_per_vertex[(get_id() * 3) + 2];
 }
 
 void Triangle::status() {
-    std::cout << "    TRIANGLE " << id << "        " << std::endl;
+    std::cout << "    TRIANGLE " << get_id() << "        " << std::endl;
     HalfEdge* h01 = v0->halfedge_on_triangle(this);
     HalfEdge* h12 = v1->halfedge_on_triangle(this);
     HalfEdge* h20 = v2->halfedge_on_triangle(this);
     unsigned width = 12;
-    std::cout  << std::setw(width) << "V0(" << v0->id << ")";
+    std::cout  << std::setw(width) << "V0(" << v0->get_id() << ")";
     if (h01->part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
-    std::cout  << std::setw(width) << "V1(" << v1->id << ")";
+    std::cout  << std::setw(width) << "V1(" << v1->get_id() << ")";
     if (h12->part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
-    std::cout  << std::setw(width) << "V2(" << v2->id << ")";
+    std::cout  << std::setw(width) << "V2(" << v2->get_id() << ")";
     if (h20->part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
-    std::cout << std::setw(width) << "V0(" << v0->id << ")" << std::endl;
+    std::cout << std::setw(width) << "V0(" << v0->get_id() << ")" << std::endl;
 
     std::cout  << std::setw(width) << " ";
     if (h01->part_of_fulledge()) {
-        std::cout  << std::setw(width) << h01->paired_halfedge()->triangle->id;
+        std::cout  << std::setw(width) << h01->paired_halfedge()->triangle->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h12->part_of_fulledge()) {
-        std::cout << std::setw(width) << h12->paired_halfedge()->triangle->id;
+        std::cout << std::setw(width) << h12->paired_halfedge()->triangle->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h20->part_of_fulledge()) {
-        std::cout << std::setw(width) << h20->paired_halfedge()->triangle->id;
+        std::cout << std::setw(width) << h20->paired_halfedge()->triangle->get_id();
     }
     else {
         std::cout << " -- ";

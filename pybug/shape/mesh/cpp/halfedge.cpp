@@ -9,13 +9,13 @@ HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
                    Vertex* v2_in, Triangle* triangle_in,
                    unsigned tri_halfedge_id) :
                    MeshAttribute(mesh_in, tri_halfedge_id) {
-    mesh->n_halfedges++;
+    get_mesh()->n_halfedges++;
     v0 = v0_in;
     v1 = v1_in;
     v2 = v2_in;
     triangle = triangle_in;
     // we need to change our id to be correct - hacky!
-    id = (3 * triangle->id) + tri_halfedge_id;
+    this->set_id(3 * triangle->get_id() + tri_halfedge_id);
     //std::cout << this << " - constructor"<< std::endl;
     // attach up halfedges and increase mesh counts for edges/halfedges
     HalfEdge* halfedge = v1->halfedge_to_vertex(v0);
@@ -37,7 +37,7 @@ HalfEdge::HalfEdge(Mesh* mesh_in, Vertex* v0_in, Vertex* v1_in,
         // setting opposite halfedge to me, and inc global full edge count
         halfedge->set_paired_halfedge(this);
         set_paired_halfedge(halfedge);
-        mesh->n_fulledges++;
+        get_mesh()->n_fulledges++;
     } else {
         // this truly is the first time this edge exists
         mesh_in->add_edge(this);

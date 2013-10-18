@@ -79,10 +79,10 @@ void Vertex::laplacian(unsigned* i_sparse, unsigned* j_sparse,
         LaplacianWeightType weight_type) {
     // sparse_pointer points into how far into the sparse_matrix structures
     // we should be recording results for this vertex
-    unsigned i = id;
+    unsigned i = get_id();
     std::set<Vertex*>::iterator v;
     for(v = vertices.begin(); v != vertices.end(); v++) {
-        unsigned j = (*v)->id;
+        unsigned j = (*v)->get_id();
         //if(i < j)
         //{
         HalfEdge* he = halfedge_to_or_from_vertex(*v);
@@ -120,14 +120,14 @@ double Vertex::laplacian_distance_weight(HalfEdge* he) {
 void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
         double* w_sparse, unsigned& sparse_pointer,
         double* cot_per_tri_vertex) {
-    unsigned i = id;
+    unsigned i = get_id();
     std::set<Vertex*>::iterator v;
     for(v = vertices.begin(); v != vertices.end(); v++) {
-        unsigned j = (*v)->id;
+        unsigned j = (*v)->get_id();
         HalfEdge* he = halfedge_to_or_from_vertex(*v);
-        double w_ij = cot_per_tri_vertex[(he->triangle->id*3) + he->v2_tri_i];
+        double w_ij = cot_per_tri_vertex[(he->triangle->get_id()*3) + he->v2_tri_i];
         if (he->part_of_fulledge()) {
-            w_ij += cot_per_tri_vertex[(he->paired_halfedge()->triangle->id*3) +
+            w_ij += cot_per_tri_vertex[(he->paired_halfedge()->triangle->get_id()*3) +
                 he->paired_halfedge()->v2_tri_i];
         }
         else {
@@ -159,13 +159,13 @@ void Vertex::verify_halfedge_connectivity() {
         if((*he)->part_of_fulledge()) {
             if((*he)->paired_halfedge()->v0 != (*he)->v1 ||
                (*he)->paired_halfedge()->v1 != (*he)->v0)
-                std::cout << "T" << triangle->id << " H:" << (*he)->id << std::endl;
+                std::cout << "T" << triangle->get_id() << " H:" << (*he)->get_id() << std::endl;
         }
     }
 }
 
 void Vertex::status() {
-    std::cout << "V" << id << std::endl;
+    std::cout << "V" << get_id() << std::endl;
     std::set<HalfEdge*>::iterator he;
     for(he = halfedges.begin(); he != halfedges.end(); he++) {
         std::cout << "|" ;
@@ -173,10 +173,10 @@ void Vertex::status() {
             std::cout << "=";
         else
             std::cout << "-";
-        std::cout << "V" << (*he)->v1->id;
-        std::cout << " (T" << (*he)->triangle->id;
+        std::cout << "V" << (*he)->v1->get_id();
+        std::cout << " (T" << (*he)->triangle->get_id();
         if ((*he)->part_of_fulledge())
-            std::cout << "=T" << (*he)->paired_halfedge()->triangle->id;
+            std::cout << "=T" << (*he)->paired_halfedge()->triangle->get_id();
         std::cout << ")" << std::endl;
     }
 }

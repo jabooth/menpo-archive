@@ -46,8 +46,8 @@ void Mesh::generate_edge_index(unsigned* edge_index) {
     unsigned count = 0;
     for(he = edges->begin(); he != edges->end(); he++, count++)
     {
-        edge_index[count*2]     = (*he)->v0->id;
-        edge_index[count*2 + 1] = (*he)->v1->id;
+        edge_index[count*2]     = (*he)->v0->get_id();
+        edge_index[count*2 + 1] = (*he)->v1->get_id();
     }
 }
 
@@ -211,8 +211,24 @@ void Mesh::reduce_tri_scalar_to_vertices(double* triangle_scalar, double* vertex
         (*t)->reduce_scalar_to_vertices(triangle_scalar, vertex_scalar);
 }
 
+unsigned MeshAttribute::get_id() const {
+	return id_;
+}
+
+void MeshAttribute::set_id(unsigned id) {
+	id_ = id;
+}
+
+Mesh* MeshAttribute::get_mesh() const {
+	return mesh_;
+}
+
+void MeshAttribute::set_mesh(Mesh* mesh) {
+	mesh_ = mesh;
+}
 
 MeshAttribute::MeshAttribute(Mesh* mesh_in, unsigned id_in) {
-    mesh = mesh_in;
-    id = id_in;
+    mesh_ = mesh_in;
+    id_ = id_in;
 }
+
