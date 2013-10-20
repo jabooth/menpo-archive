@@ -14,7 +14,7 @@ private:
     void resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad);
     Halfedge* createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
                              unsigned halfedge_id);
-    void recursiveFlip(std::set<Triangle*>* visited_tris);
+    void recursiveFlip(std::set<Triangle*>& visited_tris);
     void set_v0(Vertex* value);
     void set_v1(Vertex* value);
     void set_v2(Vertex* value);

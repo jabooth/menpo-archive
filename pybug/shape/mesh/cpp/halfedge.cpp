@@ -22,7 +22,7 @@ double AbstractEdge::length() const {
 
 Edge::Edge(Mesh *mesh, Vertex *a, Vertex *b) : AbstractEdge(mesh, a, b) {
     halfedges_ = new std::set<Halfedge*>;
-    for (auto v : vertices_) {
+    for (auto v : *vertices_) {
         v->add_edge(this);
     }
     set_id(mesh->n_edges());  // set my ID to the current edge count
@@ -38,7 +38,7 @@ unsigned Edge::n_halfedges() const {
 }
 
 bool Edge::includes_vertex(Vertex* vertex) const {
-    for (auto v : vertices_) {
+    for (auto v : *vertices_) {
         if (v == vertex)
             return true;
     }
@@ -48,13 +48,33 @@ bool Edge::includes_vertex(Vertex* vertex) const {
 bool Edge::is_flipped_edge() const {
     if (n_halfedges() != 2)
         return false;
-    Halfedge* first_he = *(halfedges_->begin());
-    Vertex* a = first_he->get_a();
-    for (auto he = halfedges_->begin() + 1; he != halfedges_->end(); he++) {
-        if ((*he)->get_a() != a)
-            return false;
+    // we know there are only two he's - pull them off
+    auto he_it = halfedges_->begin();
+    Halfedge* he_a = *(he_it);
+    he_it++;
+    Halfedge* he_b = *(he_it);
+    if (he_a->get_a() == he_b->get_a()) {
+            return true;
     }
-    return true;
+    return false;
+}
+
+bool Edge::is_overdetermined_edge() const {
+    return n_halfedges() > 2;
+}
+
+bool Edge::is_fulledge() const {
+    if (n_halfedges() != 2)
+        return false;
+    // we know there are only two he's - pull them off
+    auto he_it = halfedges_->begin();
+    Halfedge* he_a = *(he_it);
+    he_it++;
+    Halfedge* he_b = *(he_it);
+    if (he_a->get_a() == he_b->get_b()) {
+            return true;
+    }
+    return false;
 }
 
 
@@ -122,7 +142,7 @@ void Halfedge::set_tri(Triangle* value) {
     tri_ = value;
 }
 
-bool Halfedge::part_of_fulledge() {
+bool Halfedge::part_of_fulledge() const {
     return paired_he() != NULL;
 }
 

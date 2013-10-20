@@ -4,7 +4,7 @@
 #include "triangle.h"
 
 class AbstractEdge: public MeshAttribute {
-private:
+protected:
     std::set<Vertex*>* vertices_;  // the two vertices the edge involves
 
 public:
@@ -62,7 +62,7 @@ public:
 
     // status of edge
     bool isolated_halfedge();
-    bool part_of_fulledge();
+    bool part_of_fulledge() const;
     bool part_of_overdetermined_edge();
 
     void flip(); // flip this half edge, fixing up all vertex pointers

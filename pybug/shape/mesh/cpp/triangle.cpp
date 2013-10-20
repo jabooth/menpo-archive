@@ -114,48 +114,30 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
     if (e2_bad)
         std::cout << get_he2()->paired_tri() << " with " << get_he2() << "/" << get_he2()->paired_he();
     std::cout << std::endl;
-    // temporarily store the connecting pointers to other regions
-    Halfedge *h0, *h1, *h2;
-    // store out the current e0,e1,e2 (their meaning will change with the flip
-    // - we just want to ensure that the correct edges get wired up at the
-    // end!)
-    Halfedge *orig_e0, *orig_e1, *orig_e2;
-    orig_e0 = he0_;
-    orig_e1 = he1_;
-    orig_e2 = he2_;
-    // detach any bad halfedges so we don't recursively flip onto a 'good' set
-    // of triangles
+
+    // we don't want to spread onto wrongly flipped neighbours..
+    auto visited_tris = new std::set<Triangle*>;
     if (e0_bad) {
-        h0 = he0_->paired_he();
-        he0_->set_paired_he(NULL);
+        visited_tris->insert(t0());
     } if (e1_bad) {
-        h1 = he1_->paired_he();
-        he1_->set_paired_he(NULL);
+        visited_tris->insert(t1());
     } if (e2_bad) {
-        h2 = he2_->paired_he();
-        he2_->set_paired_he(NULL);
+        visited_tris->insert(t2());
     }
     // call flip on myself, flipping myself and all my neighbours.
-    this->flipContiguousRegion();
-    // now myself and all my (non bad) neighbours are flipped, I reattach the
-    // bad edges. Everything is now fixed
-    if (e0_bad)
-        orig_e0->set_paired_he(h0);
-    if (e1_bad)
-        orig_e1->set_paired_he(h1);
-    if (e2_bad)
-        orig_e2->set_paired_he(h2);
+    recursiveFlip(*visited_tris);
+    delete visited_tris;
 }
 
-Triangle* Triangle::t0() {
+Triangle* Triangle::t0() const {
     return he0_->paired_tri();
 }
 
-Triangle* Triangle::t1() {
+Triangle* Triangle::t1() const {
     return he1_->paired_tri();
 }
 
-Triangle* Triangle::t2() {
+Triangle* Triangle::t2() const {
     return he2_->paired_tri();
 }
 
@@ -169,16 +151,15 @@ std::set<Triangle *> Triangle::adjacent_triangles() {
 }
 
 void Triangle::flipContiguousRegion() {
-    std::set<Triangle*>* visited_tris = new std::set<Triangle*>;
-    visited_tris->insert(this);
+    auto visited_tris = new std::set<Triangle*>;
     // call recursive flip on ourselves
-    this->recursiveFlip(visited_tris);
+    recursiveFlip(*visited_tris);
     // all done - clean up the memory
     delete visited_tris;
 }
 
-void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
-    visited_tris->insert(this);  // add myself to the list
+void Triangle::recursiveFlip(std::set<Triangle*>& visited_tris) {
+    visited_tris.insert(this);  // add myself to the list
     //std::cout << this << " - recursive flip" << std::endl;
     // flip the meaning of each half edge around.
     he0_->flip();
@@ -191,18 +172,16 @@ void Triangle::recursiveFlip(std::set<Triangle*>* visited_tris) {
     v0_ = v1_;
     v1_ = v0_temp;
     // make sure e0, e1, e2 have the correct meaning by flipping he1_, he2_
-    Halfedge *e1_temp = he1_;
+    Halfedge *he1_temp = he1_;
     he1_ = he2_;
-    e2_ = e1_temp;
+    he2_ = he1_temp;
     // update the get_id()'s on the halfedges themselves to be correct
     he1_->set_id(he1_->get_id() + 1); // e1_ -> he2_
     he2_->set_id(he1_->get_id() - 1); // e2 -> e1
     // get each neighbouring triangle, other than the one who called us
-    std::set<Triangle*> adjacent_tris = adjacent_triangles();
-    std::set<Triangle*>::iterator it;
-    for (it = adjacent_tris.begin(); it != adjacent_tris.end(); it++) {
-        if (!visited_tris->count(*it))
-            (*it)->recursiveFlip(visited_tris);  // haven't been here before
+    for (auto tri : adjacent_triangles()) {
+        if (!visited_tris.count(tri))
+            tri->recursiveFlip(visited_tris);  // haven't been here before
     }
 }
 
