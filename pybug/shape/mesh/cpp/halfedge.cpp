@@ -22,9 +22,10 @@ double AbstractEdge::length() const {
 
 Edge::Edge(Mesh *mesh, Vertex *a, Vertex *b) : AbstractEdge(mesh, a, b) {
     halfedges_ = new std::set<Halfedge*>;
-    for (auto v : *vertices_) {
-        v->add_edge(this);
-    }
+    a->add_edge(this);
+    b->add_edge(this);
+    a->add_vertex(b);
+    b->add_vertex(a);
     set_id(mesh->n_edges());  // set my ID to the current edge count
     mesh->add_edge(this);
 }
@@ -93,7 +94,7 @@ Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
     // we need to change our id to be correct - hacky!
     set_id(3 * tri_->get_id() + tri_he_id);
     mesh->add_halfedge(this);
-
+    a->add_halfedge(this);
 }
 
 Halfedge::~Halfedge(){}

@@ -10,10 +10,16 @@ Triangle::Triangle(Mesh* mesh, unsigned tri_id, Vertex* v0,
     v0_ = v0;
     v1_ = v1;
     v2_ = v2;
-    he0_ = createHalfedge(v0_, v1_, v2_, 0);
-    he1_ = createHalfedge(v1_, v2_, v0_, 1);
-    he2_ = createHalfedge(v2_, v0_, v1_, 2);
+    // add ourselves to each of the vertices
+    v0->add_tri(this);
+    v1->add_tri(this);
+    v2->add_tri(this);
+    // build the new halfedges
+    he0_ = new Halfedge(mesh, v0, v1, v2, this, 0);
+    he1_ = new Halfedge(mesh, v1, v2, v0, this, 1);
+    he2_ = new Halfedge(mesh, v2, v0, v1, this, 2);
 
+    // if the edges are now flipped, we can correct it
     bool e0_flip = he0_->get_edge()->is_flipped_edge();
     bool e1_flip = he1_->get_edge()->is_flipped_edge();
     bool e2_flip = he2_->get_edge()->is_flipped_edge();
@@ -91,18 +97,6 @@ Edge* Triangle::e1() const {
 
 Edge* Triangle::e2() const {
     return get_he2()->get_edge();
-}
-
-Halfedge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
-                                   unsigned halfedge_id) {
-    v0->add_tri(this);
-    v0->add_vertex(v1);
-    v1->add_vertex(v0);
-    Halfedge* halfedge = new Halfedge(this->get_mesh(), v0, v1, v2, this, halfedge_id);
-    v0->add_halfedge(halfedge);
-    //if (!v0->halfedge_to_vertex(v1))
-    //    std::cout << "just added a halfedge that I cannot find" << std::endl;
-   return halfedge;
 }
 
 void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
