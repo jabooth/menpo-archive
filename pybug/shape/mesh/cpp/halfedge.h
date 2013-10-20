@@ -22,6 +22,7 @@ private:
 public:
     Edge(Mesh* mesh, Vertex* a, Vertex* b);
     ~Edge();
+    void add_halfedge(Halfedge* halfedge);
     unsigned n_halfedges() const;
 
     bool includes_vertex(Vertex* vertex) const;

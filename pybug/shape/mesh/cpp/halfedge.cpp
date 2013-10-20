@@ -38,6 +38,10 @@ unsigned Edge::n_halfedges() const {
     return halfedges_->size();
 }
 
+void Edge::add_halfedge(Halfedge* halfedge) {
+    halfedges_->insert(halfedge);
+}
+
 bool Edge::includes_vertex(Vertex* vertex) const {
     for (auto v : *vertices_) {
         if (v == vertex)
@@ -85,6 +89,7 @@ Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
     try {
         edge_ = a->edge_to_vertex(b);
     } catch (std::exception& e) {
+        std::cout << "no edge exists - building a new one" << std::endl;
         edge_ = new Edge(mesh, a, b);
     }
     a_ = a;
@@ -93,8 +98,10 @@ Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
     tri_ = tri;
     // we need to change our id to be correct - hacky!
     set_id(3 * tri_->get_id() + tri_he_id);
+    // add to the mesh, vertex, and edge
     mesh->add_halfedge(this);
     a->add_halfedge(this);
+    edge_->add_halfedge(this);
 }
 
 Halfedge::~Halfedge(){}
