@@ -6,72 +6,78 @@
 #include "triangle.h"
 
 Vertex::Vertex(Mesh* mesh_in, unsigned vertex_id):
-               MeshAttribute(mesh_in, vertex_id) {
-	//std::cout << this << " - constructor" << std::endl;
-}
-
-bool Vertex::legal_attachment_to_triangle(Triangle& t) {
-    // There should be only one halfedge per vertex-triangle.
-    // true iff this vertex has exactly one halfedge to t
-    unsigned count = 0;
-    std::set<Halfedge*>::iterator he;
-    for(he = halfedges.begin(); he != halfedges.end(); he++)
-        if ((*he)->tri_ == &t)
-            count++;
-    return (count == 1);
-}
+               MeshAttribute(mesh_in, vertex_id) {}
 
 Vertex::~Vertex() {
-	//std::cout << this << " - destructor" << std::endl;
-    halfedges.clear();
+    edges_.clear();
 }
 
 void Vertex::add_halfedge(Halfedge* halfedge) {
-	//std::cout << this << " - added " << halfedge << std::endl;
-    halfedges.insert(halfedge);
+    edges_.insert(halfedge);
 }
 
-void Vertex::add_triangle(Triangle* triangle) {
-	//std::cout << this << " - added " << triangle << std::endl;
-    triangles.insert(triangle);
+void Vertex::add_tri(Triangle* tri) {
+    tris_.insert(tri);
 }
 
 void Vertex::add_vertex(Vertex* vertex) {
-	//std::cout << this << " - added " << vertex << std::endl;
-    vertices.insert(vertex);
+    verts_.insert(vertex);
 }
 
-void Vertex::remove_halfedge(Halfedge* halfedge) {
-	//std::cout << this << " - removed " << halfedge << std::endl;
-    halfedges.erase(halfedge);
+void Vertex::rm_halfedge(Halfedge* halfedge) {
+    edges_.erase(halfedge);
 }
 
-Halfedge* Vertex::halfedge_on_triangle(Triangle* triangle) {
-	//std::cout << this << " - trying to find " << triangle << ".. ";
-    std::set<Halfedge*>::iterator he;
-    for(he = halfedges.begin(); he != halfedges.end(); he++)
-        if((*he)->tri_ == triangle) {
-            //std::cout << "found! Joined by " << (*he) << std::endl;
+Halfedge* Vertex::halfedge_on_tri(Triangle* tri) {
+    for(auto he = edges_.begin(); he != edges_.end(); he++) {
+        if((*he)->get_tri() == tri) {
             return *he;
         }
-	//std::cout << "not found" << std::endl;
+    }
     return NULL;
 }
 
-Halfedge* Vertex::halfedge_to_vertex(Vertex* vertex) {
-    std::set<Halfedge*>::iterator he;
-    for(he = halfedges.begin(); he != halfedges.end(); he++)
-        if((*he)->get_v_b() == vertex)
+Halfedge* Vertex::halfedge_to_vertex(Vertex* v) {
+    for(auto he = edges_.begin(); he != edges_.end(); he++) {
+        if((*he)->get_b() == v)
             return *he;
+    }
     return NULL;
 }
 
-Halfedge* Vertex::halfedge_to_or_from_vertex(Vertex* vertex) {
-    Halfedge* he = halfedge_to_vertex(vertex);
-    if (he == NULL)
-        he = vertex->halfedge_to_vertex(this);  // try the other way...
-    // he could be NULL or a genuine HalfEdge* - either way, return it
-    return he;
+Halfedge* Vertex::halfedge_to_or_from_vertex(Vertex* v) {
+    Halfedge* he = halfedge_to_vertex(v);
+    return he ? he : v->halfedge_to_vertex(this);
+}
+
+std::set<Halfedge*> Vertex::halfedges_to_vertex(Vertex* v) {
+    std::set<Halfedge*> halfedges;
+    for (auto he = edges_.begin(); he != edges_.end(); he++) {
+        if ((*he)->get_b() == v) {
+            halfedges.insert(*he);
+        }
+    }
+    return halfedges;
+}
+
+std::set<Halfedge*> Vertex::halfedges_to_or_from_vertex(Vertex* vertex) {
+    std::set<Halfedge*> halfedges = vertex->halfedges_to_vertex(this);
+    for (auto he = edges_.begin(); he != edges_.end(); he++) {
+        if ((*he)->get_b() == vertex) {
+            halfedges.insert(*he);
+        }
+    }
+    return halfedges;
+}
+
+bool Vertex::legal_attachment_to_tri(Triangle& t) {
+    // There should be only one halfedge per vertex-triangle.
+    // true iff this vertex has exactly one halfedge to t
+    unsigned count = 0;
+    for(auto he = edges_.begin(); he != edges_.end(); he++)
+        if ((*he)->get_tri() == &t)
+            count++;
+    return (count == 1);
 }
 
 void Vertex::laplacian(unsigned* i_sparse, unsigned* j_sparse,
@@ -80,8 +86,7 @@ void Vertex::laplacian(unsigned* i_sparse, unsigned* j_sparse,
     // sparse_pointer points into how far into the sparse_matrix structures
     // we should be recording results for this vertex
     unsigned i = get_id();
-    std::set<Vertex*>::iterator v;
-    for(v = vertices.begin(); v != vertices.end(); v++) {
+    for(auto v = verts_.begin(); v != verts_.end(); v++) {
         unsigned j = (*v)->get_id();
         //if(i < j)
         //{
@@ -121,13 +126,12 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
         double* w_sparse, unsigned& sparse_pointer,
         double* cot_per_tri_vertex) {
     unsigned i = get_id();
-    std::set<Vertex*>::iterator v;
-    for(v = vertices.begin(); v != vertices.end(); v++) {
+    for(auto v = verts_.begin(); v != verts_.end(); v++) {
         unsigned j = (*v)->get_id();
         Halfedge* he = halfedge_to_or_from_vertex(*v);
-        double w_ij = cot_per_tri_vertex[(he->tri_->get_id()*3) + he->v2_tri_i];
+        double w_ij = cot_per_tri_vertex[(he->get_tri()->get_id()*3) + he->v2_tri_i];
         if (he->part_of_fulledge()) {
-            w_ij += cot_per_tri_vertex[(he->get_paired_he()->tri_->get_id()*3) +
+            w_ij += cot_per_tri_vertex[(he->get_paired_he()->get_tri()->get_id()*3) +
                 he->get_paired_he()->v2_tri_i];
         }
         else {
@@ -142,23 +146,22 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
 }
 
 void Vertex::verify_halfedge_connectivity() {
-    std::set<Halfedge*>::iterator he;
-    for(he = halfedges.begin(); he != halfedges.end(); he++) {
-        Triangle* triangle = (*he)->tri_;
+    for(auto he = edges_.begin(); he != edges_.end(); he++) {
+        Triangle* triangle = (*he)->get_tri();
         Vertex* t_v0 = triangle->get_v0();
         Vertex* t_v1 = triangle->get_v1();
         Vertex* t_v2 = triangle->get_v2();
         if(t_v0 != this && t_v1 != this && t_v2 != this)
             std::cout << "this halfedge does not live on it's triangle!"
                 << std::endl;
-        if((*he)->get_v_a() != this)
+        if((*he)->get_a() != this)
             std::cout << "half edge errornously connected" << std::endl;
-        if((*he)->ccw_around_tri()->ccw_around_tri()->get_v_b() != (*he)->get_v_a())
+        if((*he)->ccw_around_tri()->ccw_around_tri()->get_b() != (*he)->get_a())
             std::cout << "cannie spin raarnd the triangle like man!"
                 << std::endl;
         if((*he)->part_of_fulledge()) {
-            if((*he)->get_paired_he()->get_v_a() != (*he)->get_v_b() ||
-               (*he)->get_paired_he()->get_v_b() != (*he)->get_v_a())
+            if((*he)->get_paired_he()->get_a() != (*he)->get_b() ||
+               (*he)->get_paired_he()->get_b() != (*he)->get_a())
                 std::cout << "T" << triangle->get_id() << " H:" << (*he)->get_id() << std::endl;
         }
     }
@@ -167,23 +170,23 @@ void Vertex::verify_halfedge_connectivity() {
 void Vertex::status() {
     std::cout << "V" << get_id() << std::endl;
     std::set<Halfedge*>::iterator he;
-    for(he = halfedges.begin(); he != halfedges.end(); he++) {
+    for(he = edges_.begin(); he != edges_.end(); he++) {
         std::cout << "|" ;
         if ((*he)->part_of_fulledge())
             std::cout << "=";
         else
             std::cout << "-";
-        std::cout << "V" << (*he)->get_v_b()->get_id();
-        std::cout << " (T" << (*he)->tri_->get_id();
+        std::cout << "V" << (*he)->get_b()->get_id();
+        std::cout << " (T" << (*he)->get_tri()->get_id();
         if ((*he)->part_of_fulledge())
-            std::cout << "=T" << (*he)->get_paired_he()->tri_->get_id();
+            std::cout << "=T" << (*he)->get_paired_he()->get_tri()->get_id();
         std::cout << ")" << std::endl;
     }
 }
 
 void Vertex::test_contiguous(std::set<Vertex*>* vertices_not_visited) {
     std::set<Vertex*>::iterator v;
-    for (v = vertices.begin(); v != vertices.end(); v++)
+    for (v = verts_.begin(); v != verts_.end(); v++)
         if (vertices_not_visited->erase(*v))
             (*v)->test_contiguous(vertices_not_visited);
 }
