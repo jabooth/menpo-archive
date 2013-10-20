@@ -8,24 +8,20 @@
 #include "vertex.h"
 #include "halfedge.h"
 
-Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
+Mesh::Mesh(unsigned *tri_index, unsigned n_tris, unsigned n_vertices){
     // initialize our vectors, and reserve the space
     triangles = new std::vector<Triangle*>;
-    triangles->reserve(n_tris_in);
+    triangles->reserve(n_tris);
     vertices = new std::vector<Vertex*>;
-    vertices->reserve(n_vertices_in);
+    vertices->reserve(n_vertices);
     edges = new std::set<Halfedge*>;
     halfedges = new std::set<Halfedge*>;
-    n_vertices = n_vertices_in;
-    n_triangles = n_tris_in;
     // set the no. of full/half edges to 0
     // (on creation halfedges pairs will increment these as suitable)
-    n_fulledges = 0;
-    n_halfedges = 0;
     for(unsigned i = 0; i < n_vertices; i++) {
         vertices->push_back(new Vertex(this, i));
     }
-    for(unsigned i = 0; i < n_triangles; i++) {
+    for(unsigned i = 0; i < n_tris; i++) {
         // get the index into the vertex positions
         unsigned l = tri_index[i*3    ];
         unsigned m = tri_index[i*3 + 1];
@@ -38,8 +34,38 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris_in, unsigned n_vertices_in){
     }
 }
 
-void Mesh::add_edge(Halfedge* halfedge) {
-    edges->insert(halfedge);
+unsigned Mesh::n_vertices() const {
+    return vertices->size();
+}
+
+unsigned Mesh::n_triangles() const {
+    return triangles->size();
+}
+
+unsigned Mesh::n_edges() const {
+    return edges->size();
+}
+
+unsigned Mesh::n_halfedges() const {
+    return halfedges->size();
+}
+
+unsigned Mesh::n_fulledges() const {
+    unsigned n_fulledge = 0;
+    for (auto edge : edges) {
+        if (edge->is_fulledge()) {
+            n_fulledge++;
+        }
+    }
+    return n_fulledge;
+}
+
+void Mesh::add_edge(Edge* edge) {
+    edges->insert(edge);
+}
+
+void Mesh::add_halfedge(Halfedge* halfedge) {
+    halfedges->insert(halfedge);
 }
 
 void Mesh::generate_edge_index(unsigned* edge_index) {
@@ -77,18 +103,17 @@ void Mesh::test_chiral_consistency() {
     unsigned fulledges_encountered = 0;
     unsigned halfedges_encountered = 0;
     unsigned incorrectly_paired = 0;
-    std::set<Halfedge*>::iterator edge;
-    for (edge = edges->begin(); edge != edges->end(); edge++) {
+    for (auto edge : edges) {
         halfedges_encountered++;
-        if ((*edge)->part_of_fulledge()) {
+        if (edge->part_of_fulledge()) {
             fulledges_encountered++;
             halfedges_encountered++;
-            if ((*edge)->get_paired_he()->get_b() != (*edge)->get_a() ||
-                    (*edge)->get_paired_he()->get_a() != (*edge)->get_b()) {
+            if (edge->paired_he()->get_b() != edge->get_a() ||
+                    edge->paired_he()->get_a() != edge->get_b()) {
                 incorrectly_paired++;
-                std::cout << "ERROR: " << (*edge) << " (" << (*edge)->get_a()
-                    << "-" << (*edge)->get_b() << ") is paired with " << (*edge)->get_paired_he()
-                    << " (" << (*edge)->get_paired_he()->get_a() << " - " << (*edge)->get_paired_he()->get_b()
+                std::cout << "ERROR: " << edge << " (" << edge->get_a()
+                    << "-" << edge->get_b() << ") is paired with " << edge->paired_he()
+                    << " (" << edge->paired_he()->get_a() << " - " << edge->paired_he()->get_b()
                     << ")" << std::endl;
             }
         }
@@ -101,8 +126,8 @@ void Mesh::test_chiral_consistency() {
             << " incorrect halfedge pairings)" << std::endl;
     }
     std::cout << "EDGECOUNT: ";
-    if (fulledges_encountered == n_fulledges &&
-            halfedges_encountered == n_halfedges) {
+    if (fulledges_encountered == n_fulledges() &&
+            halfedges_encountered == n_halfedges()) {
         std::cout << "PASS" << std::endl;
     }
     else {
@@ -117,7 +142,7 @@ void Mesh::test_contiguous() {
         regions_count << " contiguous region(s)." << std::endl;
     if (regions_count > 1) {
         size_t largest_region = (*vertices_per_region.begin()).size();
-        int region_pc= int((100.0 * largest_region) / n_vertices);
+        int region_pc= int((100.0 * largest_region) / n_vertices());
         std::cout << "The largest contiguous region acounts for approximatey "
             << region_pc << "\% of the mesh." << std::endl;
     }
@@ -155,62 +180,60 @@ std::vector< std::set<Vertex*> > Mesh::contiguous_regions() {
     return vertices_per_region;
 }
 
-void Mesh::laplacian(unsigned* i_sparse, unsigned* j_sparse,
-        double* v_sparse, LaplacianWeightType weight_type) {
-    // pointers to structures used to define a sparse matrix of doubles
-    // where the k'th value of each array is treated to mean:
-    // sparse_matrix[i_sparse[k]][j_sparse[k]] = v_sparse[k]
-
-    // we expect that the attachments at i_sparse, j_sparse
-    // and v_sparse have already been set to the correct
-    // dimentions before this call
-    // (each should be of length 2*n_halfedges)
-    // the first n_coord entries are the diagonals. => the i'th
-    // value of both i_sparse and j_sparse is just i
-    for(unsigned int i = 0; i < n_vertices; i++) {
-        i_sparse[i] = i;
-        j_sparse[i] = i;
-    }
-    // set the sparse_pointer to the end of the diagonal elements
-    unsigned sparse_pointer = n_vertices;
-    // now loop through each vertex and call the laplacian method.
-    // This method will populate the sparse matrix arrays with the
-    // position and value that should be assiged to the matrix
-    std::vector<Vertex*>::iterator v;
-    for(v = vertices->begin(); v != vertices->end(); v++) {
-        (*v)->laplacian(i_sparse, j_sparse, v_sparse,
-                sparse_pointer, weight_type);
-    }
-}
-
-void Mesh::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
-        double* v_sparse, double* cotangents) {
-    for(unsigned int i = 0; i < n_vertices; i++) {
-        i_sparse[i] = i;
-        j_sparse[i] = i;
-    }
-    unsigned sparse_pointer = n_vertices;
-    std::vector<Vertex*>::iterator v;
-    for(v = vertices->begin(); v != vertices->end(); v++){
-        (*v)->cotangent_laplacian(i_sparse, j_sparse, v_sparse,
-                sparse_pointer, cotangents);
-    }
-}
+//void Mesh::laplacian(unsigned* i_sparse, unsigned* j_sparse,
+//        double* v_sparse, LaplacianWeightType weight_type) {
+//    // pointers to structures used to define a sparse matrix of doubles
+//    // where the k'th value of each array is treated to mean:
+//    // sparse_matrix[i_sparse[k]][j_sparse[k]] = v_sparse[k]
+//
+//    // we expect that the attachments at i_sparse, j_sparse
+//    // and v_sparse have already been set to the correct
+//    // dimentions before this call
+//    // (each should be of length 2*n_halfedges)
+//    // the first n_coord entries are the diagonals. => the i'th
+//    // value of both i_sparse and j_sparse is just i
+//    for(unsigned int i = 0; i < n_vertices; i++) {
+//        i_sparse[i] = i;
+//        j_sparse[i] = i;
+//    }
+//    // set the sparse_pointer to the end of the diagonal elements
+//    unsigned sparse_pointer = n_vertices;
+//    // now loop through each vertex and call the laplacian method.
+//    // This method will populate the sparse matrix arrays with the
+//    // position and value that should be assiged to the matrix
+//    std::vector<Vertex*>::iterator v;
+//    for(v = vertices->begin(); v != vertices->end(); v++) {
+//        (*v)->laplacian(i_sparse, j_sparse, v_sparse,
+//                sparse_pointer, weight_type);
+//    }
+//}
+//
+//void Mesh::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
+//        double* v_sparse, double* cotangents) {
+//    for(unsigned int i = 0; i < n_vertices; i++) {
+//        i_sparse[i] = i;
+//        j_sparse[i] = i;
+//    }
+//    unsigned sparse_pointer = n_vertices;
+//    std::vector<Vertex*>::iterator v;
+//    for(v = vertices->begin(); v != vertices->end(); v++){
+//        (*v)->cotangent_laplacian(i_sparse, j_sparse, v_sparse,
+//                sparse_pointer, cotangents);
+//    }
+//}
 
 void Mesh::reduce_tri_scalar_per_vertex_to_vertices(
         double* triangle_scalar_per_vertex, double* vertex_scalar) {
     // this one is for when we have a scalar value defined at each vertex of each triangle
-    std::vector<Triangle*>::iterator t;
-    for(t = triangles->begin(); t != triangles->end(); t++)
-        (*t)->reduce_scalar_per_vertex_to_vertices(triangle_scalar_per_vertex, vertex_scalar);
+    for(auto t : *triangles)
+        t->reduce_scalar_per_vertex_to_vertices(triangle_scalar_per_vertex, vertex_scalar);
 }
 
 void Mesh::reduce_tri_scalar_to_vertices(double* triangle_scalar, double* vertex_scalar) {
     // this one is for when we have a scalar value defined at each triangle and needs to be
     // applied to each vertex
-    std::vector<Triangle*>::iterator t;
-    for(t = triangles->begin(); t != triangles->end(); t++)
-        (*t)->reduce_scalar_to_vertices(triangle_scalar, vertex_scalar);
+    for(auto t : *triangles)
+        t->reduce_scalar_to_vertices(triangle_scalar, vertex_scalar);
 }
 
 unsigned MeshAttribute::get_id() const {

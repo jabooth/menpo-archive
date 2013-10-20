@@ -5,30 +5,43 @@
 #include "triangle.h"
 #include "vertex.h"
 
-Triangle::Triangle(Mesh* mesh_in, unsigned tri_id, Vertex* v0,
-        Vertex* v1, Vertex* v2) : MeshAttribute(mesh_in, tri_id) {
-	//std::cout << this << " - constructor" << std::endl;
+Triangle::Triangle(Mesh* mesh, unsigned tri_id, Vertex* v0,
+        Vertex* v1, Vertex* v2) : MeshAttribute(mesh, tri_id) {
     v0_ = v0;
     v1_ = v1;
     v2_ = v2;
     // we need to know if any of the edges are going to be flipped when
     // connected up - i.e. do any of these halfedges already exist?
-    bool e0_bad = v0_->halfedge_to_vertex(v1_) ? 1 : 0;
-    bool e1_bad = v1_->halfedge_to_vertex(v2_) ? 1 : 0;
-    bool e2_bad = v2_->halfedge_to_vertex(v0_) ? 1 : 0;
-    if (e0_bad && v1_->halfedge_to_vertex(v0_))
-        std::cout << this << " - problem0." << std::endl;
-    if (e1_bad && v2_->halfedge_to_vertex(v1_))
-        std::cout << this << " - problem1." << std::endl;
-    if (e2_bad && v0_->halfedge_to_vertex(v2_))
-        std::cout << this << " - problem2." << std::endl;
-    // create all the new halfedges.
+    bool e0_flip = v0_->halfedge_to_vertex(v1_) ? 1 : 0;
+    bool e1_flip = v1_->halfedge_to_vertex(v2_) ? 1 : 0;
+    bool e2_flip = v2_->halfedge_to_vertex(v0_) ? 1 : 0;
+    // if, in addition to having a half edge going this direction already
+    // existing (which we can fix with a flip) we have another halfedge
+    // made, then flipping won't help - there is no way to ensure chirality.
+    // we mark these edges, and deal with them after mesh construction is complete.
+    if (e0_flip && v1_->halfedge_to_vertex(v0_)) {
+        std::cout << this << " is over determined on e0 (" << v0_ << "-"
+                << v1_ << ")" << std::endl;
+        e0_flip = false; // no point in flipping now
+    }
+    if (e1_flip && v2_->halfedge_to_vertex(v1_)) {
+        std::cout << this << " is over determined on e1 (" << v1_ << "-"
+                << v2_ << ")" << std::endl;
+        e1_flip = false;
+    }
+    if (e2_flip && v0_->halfedge_to_vertex(v2_)) {
+        std::cout << this << " is over determined on e2 (" << v2_ << "-"
+                << v0_ << ")" << std::endl;
+        e2_flip = false;
+    }
+    // create all the new halfedges - we need these for this
+    // triangle to make sense
     e0_ = createHalfedge(v0_, v1_, v2_, 0);
     e1_ = createHalfedge(v1_, v2_, v0_, 1);
     e2_ = createHalfedge(v2_, v0_, v1_, 2);
     // deal with any that need flipping
-    if (e0_bad || e1_bad || e2_bad)
-        resolveChirality(e0_bad, e1_bad, e2_bad);
+    if (e0_flip || e0_flip || e0_flip)
+        resolveChirality(e0_flip, e1_flip, e2_flip);
     // now, we should definitely have a well formed triangle.
     // lets check...
     if (!(v0_->legal_attachment_to_tri(*this) &&
@@ -102,14 +115,14 @@ Halfedge* Triangle::createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
 }
 
 void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
-    //std::cout << this << " - chirality error against ";
-    //if (e0_bad)
-    //    std::cout << e0->other_triangle() << " with " << e0 << "/" << e0->paired_halfedge();
-    //if (e1_bad)
-    //    std::cout << e1->other_triangle() << " with " << e1 << "/" << e1->paired_halfedge();
-    //if (e2_bad)
-    //    std::cout << e2->other_triangle() << " with " << e2 << "/" << e2->paired_halfedge();
-    ////std::cout << std::endl;
+    std::cout << this << " - resolving chirality error against ";
+    if (e0_bad)
+        std::cout << get_e0()->paired_tri() << " with " << get_e0() << "/" << get_e0()->paired_he();
+    if (e1_bad)
+        std::cout << get_e1()->paired_tri() << " with " << get_e1() << "/" << get_e1()->paired_he();
+    if (e2_bad)
+        std::cout << get_e2()->paired_tri() << " with " << get_e2() << "/" << get_e2()->paired_he();
+    std::cout << std::endl;
     // temporarily store the connecting pointers to other regions
     Halfedge *h0, *h1, *h2;
     // store out the current e0,e1,e2 (their meaning will change with the flip
@@ -122,13 +135,13 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
     // detach any bad halfedges so we don't recursively flip onto a 'good' set
     // of triangles
     if (e0_bad) {
-        h0 = e0_->get_paired_he();
+        h0 = e0_->paired_he();
         e0_->set_paired_he(NULL);
     } if (e1_bad) {
-        h1 = e1_->get_paired_he();
+        h1 = e1_->paired_he();
         e1_->set_paired_he(NULL);
     } if (e2_bad) {
-        h2 = e2_->get_paired_he();
+        h2 = e2_->paired_he();
         e2_->set_paired_he(NULL);
     }
     // call flip on myself, flipping myself and all my neighbours.
@@ -144,15 +157,15 @@ void Triangle::resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad) {
 }
 
 Triangle* Triangle::t0() {
-    return e0_->other_tri();
+    return e0_->paired_tri();
 }
 
 Triangle* Triangle::t1() {
-    return e1_->other_tri();
+    return e1_->paired_tri();
 }
 
 Triangle* Triangle::t2() {
-    return e2_->other_tri();
+    return e2_->paired_tri();
 }
 
 std::set<Triangle *> Triangle::adjacent_triangles() {
@@ -247,21 +260,21 @@ void Triangle::status() {
 
     std::cout  << std::setw(width) << " ";
     if (h01->part_of_fulledge()) {
-        std::cout  << std::setw(width) << h01->other_tri()->get_id();
+        std::cout  << std::setw(width) << h01->paired_tri()->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h12->part_of_fulledge()) {
-        std::cout << std::setw(width) << h12->other_tri()->get_id();
+        std::cout << std::setw(width) << h12->paired_tri()->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
     if (h20->part_of_fulledge()) {
-        std::cout << std::setw(width) << h20->other_tri()->get_id();
+        std::cout << std::setw(width) << h20->paired_tri()->get_id();
     }
     else {
         std::cout << " -- ";

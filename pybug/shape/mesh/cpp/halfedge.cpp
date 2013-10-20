@@ -4,43 +4,59 @@
 #include "triangle.h"
 #include "vertex.h"
 
+AbstractEdge::AbstractEdge(Mesh* mesh, Vertex *a, Vertex *b) : MeshAttribute(mesh, 0) {
+    vertices_ = new std::set<Vertex*>;
+    vertices_->insert(a);
+    vertices_->insert(b);
+}
+
+AbstractEdge::~AbstractEdge() {
+    delete vertices_;
+}
+
+double AbstractEdge::length() const {
+    // TODO calculate this
+    return 1.0;
+}
+
+
+Edge::Edge(Mesh *mesh, Vertex *a, Vertex *b) : AbstractEdge(mesh, a, b) {
+    halfedges_ = new std::set<Halfedge*>;
+    for (auto v : vertices_) {
+        v->add_edge(this);
+    }
+    set_id(mesh->n_edges());  // set my ID to the current edge count
+    mesh->add_edge(this);
+}
+
+Edge::~Edge() {
+    delete halfedges_;
+}
+
+bool Edge::includes_vertex(Vertex* vertex) const {
+    for (auto v : vertices_) {
+        if (v == vertex)
+            return true;
+    }
+    return false;
+}
 
 Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
                    Triangle* tri, unsigned tri_he_id) :
-                   MeshAttribute(mesh, tri_he_id) {
-    get_mesh()->n_halfedges++;
+                        AbstractEdge(mesh, a, b) {
+    try {
+        edge_ = a->edge_to_vertex(b);
+    } catch (std::exception& e) {
+        edge_ = new Edge(mesh, a, b);
+    }
     a_ = a;
     b_ = b;
     opp_ = opposite;
     tri_ = tri;
     // we need to change our id to be correct - hacky!
     set_id(3 * tri_->get_id() + tri_he_id);
-    // attach up halfedges and increase mesh counts for edges/halfedges
-    Halfedge* halfedge = b_->halfedge_to_vertex(a_);
-    if (!halfedge) {
-        // try the other way. Note that this is now a broken halfedge, which
-        // the triangle who constructed me will have to detect and fix.
-        halfedge = a_->halfedge_to_vertex(b_);
-    //    std::cout << this << " - no opposite halfedge to pair with" << std::endl;
-    //    if(halfedge)
-    //        std::cout << this << " - warning: existing he " << halfedge <<
-    //           " already connects " << v0 << "-" << v1 << " chirality repair "
-    //           << "should be triggered" << std::endl;
-    //} else {
-    //    //std::cout << this << " - has opposite halfedge " << halfedge
-    //        << std::endl;
-    }
-    if (halfedge) {
-        //std::cout << this << " - as a halfedge exists, pairing" << std::endl;
-        // setting opposite halfedge to me, and inc global full edge count
-        halfedge->set_paired_he(this);
-        set_paired_he(halfedge);
-        get_mesh()->n_fulledges++;
-    } else {
-        // this truly is the first time this edge exists
-        mesh->add_edge(this);
-        set_paired_he(NULL);
-    }
+    mesh->add_halfedge(this);
+
 }
 
 Halfedge::~Halfedge(){}
@@ -69,7 +85,7 @@ void Halfedge::set_opp(Vertex* value) {
 	opp_ = value;
 }
 
-Halfedge* Halfedge::get_paired_he() const {
+Halfedge* Halfedge::paired_he() const {
     return paired_halfedge_;
 }
 
@@ -77,7 +93,7 @@ void Halfedge::set_paired_he(Halfedge* value) {
     paired_halfedge_ = value;
 }
 
-Triangle* Halfedge::get_tri() {
+Triangle* Halfedge::get_tri() const {
     return tri_;
 }
 
@@ -86,11 +102,11 @@ void Halfedge::set_tri(Triangle* value) {
 }
 
 bool Halfedge::part_of_fulledge() {
-    return get_paired_he() != NULL;
+    return paired_he() != NULL;
 }
 
-Triangle* Halfedge::other_tri() {
-    return this->part_of_fulledge() ? get_paired_he()->get_tri() : NULL;
+Triangle* Halfedge::paired_tri() const {
+    return this->part_of_fulledge() ? paired_he()->get_tri() : NULL;
 }
 
 Halfedge* Halfedge::ccw_around_tri() {
@@ -106,9 +122,3 @@ void Halfedge::flip() {
     set_a(get_b());
     set_b(v_a_temp);
 }
-
-double Halfedge::length() {
-    // TODO calculate this
-    return 1.0;
-}
-

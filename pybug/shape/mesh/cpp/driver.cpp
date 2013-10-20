@@ -2,7 +2,7 @@
 #include <fstream>
 
 int main() {
-    std::fstream trilist_data("/home/jab08/trilist.txt");
+    std::fstream trilist_data("/home/jab08/squaretl.txt");
     unsigned n_triangles, n_vertices, tl_i;
     trilist_data >> n_triangles;
     trilist_data >> n_vertices;

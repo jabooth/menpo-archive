@@ -10,7 +10,8 @@ class Vertex;
 class Vertex : public MeshAttribute
 {
 private:
-    std::set<Halfedge*> edges_; //halfedges STARTING from this vertex
+    std::set<Edge*> edges_; //edges attached to this vertex
+    std::set<Halfedge*> halfedges_; //halfedges STARTING from this vertex
     std::set<Triangle*> tris_; //ALL triangles attached to this vertex
     std::set<Vertex*> verts_; //ALL other vertices attached to this vertex
 
@@ -20,15 +21,20 @@ public:
 
     // mesh construction methods
     void add_halfedge(Halfedge* halfedge);
+    void rm_halfedge(Halfedge* halfedge);
     void add_tri(Triangle* triangle);
     void add_vertex(Vertex* vertex);
-    void rm_halfedge(Halfedge* halfedge);
+    void add_edge(Edge* edge);
+
+    // edge retrival
+    Edge* edge_to_vertex(Vertex* vertex);
 
     // halfedge retrieval methods about this vertex
     Halfedge* halfedge_on_tri(Triangle* triangle);
     Halfedge* halfedge_to_vertex(Vertex* vertex);
     Halfedge* halfedge_to_or_from_vertex(Vertex* vertex);
 
+    // sets of halfege retrieval
     std::set<Halfedge*> halfedges_to_vertex(Vertex* vertex);
     std::set<Halfedge*> halfedges_to_or_from_vertex(Vertex* vertex);
 

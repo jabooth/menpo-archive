@@ -1,15 +1,45 @@
 #pragma once
+#include <set>
 #include "mesh.h"
 #include "triangle.h"
 
-class Halfedge : public MeshAttribute
+class AbstractEdge: public MeshAttribute {
+private:
+    std::set<Vertex*>* vertices_;  // the two vertices the edge involves
+
+public:
+    AbstractEdge(Mesh* mesh, Vertex* a, Vertex* b);
+    ~AbstractEdge();
+    std::set<Vertex*>* get_vertices() const;
+    double length() const;
+};
+
+
+class Edge : public AbstractEdge {
+private:
+    std::set<Halfedge *> halfedges_;
+
+public:
+    Edge(Mesh* mesh, Vertex* a, Vertex* b);
+    bool includes_vertex(Vertex* vertex) const;
+    bool is_halfedge() const;
+    bool is_fulledge() const;
+    bool is_overdetermined_edge() const;
+};
+
+
+class Halfedge : public AbstractEdge
 {
 private:
-    Halfedge* paired_halfedge_;
+    Edge* edge_;  // edge I belong too
     Vertex* a_;  // start of HE
     Vertex* b_;  // end of HE
-    Vertex* opp_; // opposite vertex on my triangle
-    Triangle* tri_; // triangle I belong too
+    Vertex* opp_;  // opposite vertex on my triangle
+    Triangle* tri_;  // triangle I belong too
+    Halfedge* paired_halfedge_;
+    void set_tri(Triangle* value);
+    void set_paired_he(Halfedge* value);
+
 public:
     Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
              Triangle* tri, unsigned tri_he_id);
@@ -21,26 +51,18 @@ public:
     void set_a(Vertex* value);
     void set_b(Vertex* value);
     void set_opp(Vertex* value);
+    Triangle* get_tri() const;
+    Halfedge* paired_he() const;
+    Triangle* paired_tri() const;
 
-    Halfedge* get_paired_he() const;
-    void set_paired_he(Halfedge* value);
-
-    Triangle* get_tri();
-    void set_tri(Triangle* value);
-
-    Triangle* other_tri();
-
-    // TODO rename these to distinguish from v0 on triangle
-    int v0_tri_i; // The position no. of each vertex on triangle
-    int v1_tri_i; // i.e., if MY v0 is actually the triangle's v1,
-    int v2_tri_i; // v0_tri_i == 1, v1_tri_i == 2 ... (always CCW)
-
-
+    // status of edge
+    bool isolated_halfedge();
     bool part_of_fulledge();
+    bool part_of_overdetermined_edge();
+
     void flip(); // flip this half edge, fixing up all vertex pointers
     // along the way
     Halfedge* ccw_around_tri();
-    double length();
     friend std::ostream& operator<<(std::ostream& out, const Halfedge* h) {
         return out << "H" << ((h->get_id())/3) << ":" << h->get_id() % 3;
     }

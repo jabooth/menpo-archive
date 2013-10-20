@@ -1,3 +1,4 @@
+#include <exception>
 #include <iostream>
 #include <ostream>
 #include <assert.h>
@@ -9,11 +10,15 @@ Vertex::Vertex(Mesh* mesh_in, unsigned vertex_id):
                MeshAttribute(mesh_in, vertex_id) {}
 
 Vertex::~Vertex() {
-    edges_.clear();
+    halfedges_.clear();
+}
+
+void Vertex::add_edge(Edge* edge) {
+    edges_.insert(edge);
 }
 
 void Vertex::add_halfedge(Halfedge* halfedge) {
-    edges_.insert(halfedge);
+    halfedges_.insert(halfedge);
 }
 
 void Vertex::add_tri(Triangle* tri) {
@@ -25,24 +30,32 @@ void Vertex::add_vertex(Vertex* vertex) {
 }
 
 void Vertex::rm_halfedge(Halfedge* halfedge) {
-    edges_.erase(halfedge);
+    halfedges_.erase(halfedge);
+}
+
+Edge* Vertex::edge_to_vertex(Vertex* vertex) {
+    for (auto edge : edges_) {
+        if (edge->includes_vertex(vertex))
+            return edge;
+    }
+    throw std::exception;
 }
 
 Halfedge* Vertex::halfedge_on_tri(Triangle* tri) {
-    for(auto he = edges_.begin(); he != edges_.end(); he++) {
+    for(auto he = halfedges_.begin(); he != halfedges_.end(); he++) {
         if((*he)->get_tri() == tri) {
             return *he;
         }
     }
-    return NULL;
+    throw std::exception;
 }
 
 Halfedge* Vertex::halfedge_to_vertex(Vertex* v) {
-    for(auto he = edges_.begin(); he != edges_.end(); he++) {
+    for(auto he = halfedges_.begin(); he != halfedges_.end(); he++) {
         if((*he)->get_b() == v)
             return *he;
     }
-    return NULL;
+    throw std::exception;
 }
 
 Halfedge* Vertex::halfedge_to_or_from_vertex(Vertex* v) {
@@ -52,7 +65,7 @@ Halfedge* Vertex::halfedge_to_or_from_vertex(Vertex* v) {
 
 std::set<Halfedge*> Vertex::halfedges_to_vertex(Vertex* v) {
     std::set<Halfedge*> halfedges;
-    for (auto he = edges_.begin(); he != edges_.end(); he++) {
+    for (auto he = halfedges_.begin(); he != halfedges_.end(); he++) {
         if ((*he)->get_b() == v) {
             halfedges.insert(*he);
         }
@@ -62,7 +75,7 @@ std::set<Halfedge*> Vertex::halfedges_to_vertex(Vertex* v) {
 
 std::set<Halfedge*> Vertex::halfedges_to_or_from_vertex(Vertex* vertex) {
     std::set<Halfedge*> halfedges = vertex->halfedges_to_vertex(this);
-    for (auto he = edges_.begin(); he != edges_.end(); he++) {
+    for (auto he = halfedges_.begin(); he != halfedges_.end(); he++) {
         if ((*he)->get_b() == vertex) {
             halfedges.insert(*he);
         }
@@ -74,7 +87,7 @@ bool Vertex::legal_attachment_to_tri(Triangle& t) {
     // There should be only one halfedge per vertex-triangle.
     // true iff this vertex has exactly one halfedge to t
     unsigned count = 0;
-    for(auto he = edges_.begin(); he != edges_.end(); he++)
+    for(auto he = halfedges_.begin(); he != halfedges_.end(); he++)
         if ((*he)->get_tri() == &t)
             count++;
     return (count == 1);
@@ -131,8 +144,8 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
         Halfedge* he = halfedge_to_or_from_vertex(*v);
         double w_ij = cot_per_tri_vertex[(he->get_tri()->get_id()*3) + he->v2_tri_i];
         if (he->part_of_fulledge()) {
-            w_ij += cot_per_tri_vertex[(he->get_paired_he()->get_tri()->get_id()*3) +
-                he->get_paired_he()->v2_tri_i];
+            w_ij += cot_per_tri_vertex[(he->paired_he()->get_tri()->get_id()*3) +
+                he->paired_he()->v2_tri_i];
         }
         else {
             //w_ij += w_ij;
@@ -146,7 +159,7 @@ void Vertex::cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
 }
 
 void Vertex::verify_halfedge_connectivity() {
-    for(auto he = edges_.begin(); he != edges_.end(); he++) {
+    for(auto he = halfedges_.begin(); he != halfedges_.end(); he++) {
         Triangle* triangle = (*he)->get_tri();
         Vertex* t_v0 = triangle->get_v0();
         Vertex* t_v1 = triangle->get_v1();
@@ -160,8 +173,8 @@ void Vertex::verify_halfedge_connectivity() {
             std::cout << "cannie spin raarnd the triangle like man!"
                 << std::endl;
         if((*he)->part_of_fulledge()) {
-            if((*he)->get_paired_he()->get_a() != (*he)->get_b() ||
-               (*he)->get_paired_he()->get_b() != (*he)->get_a())
+            if((*he)->paired_he()->get_a() != (*he)->get_b() ||
+               (*he)->paired_he()->get_b() != (*he)->get_a())
                 std::cout << "T" << triangle->get_id() << " H:" << (*he)->get_id() << std::endl;
         }
     }
@@ -170,7 +183,7 @@ void Vertex::verify_halfedge_connectivity() {
 void Vertex::status() {
     std::cout << "V" << get_id() << std::endl;
     std::set<Halfedge*>::iterator he;
-    for(he = edges_.begin(); he != edges_.end(); he++) {
+    for(he = halfedges_.begin(); he != halfedges_.end(); he++) {
         std::cout << "|" ;
         if ((*he)->part_of_fulledge())
             std::cout << "=";
@@ -179,7 +192,7 @@ void Vertex::status() {
         std::cout << "V" << (*he)->get_b()->get_id();
         std::cout << " (T" << (*he)->get_tri()->get_id();
         if ((*he)->part_of_fulledge())
-            std::cout << "=T" << (*he)->get_paired_he()->get_tri()->get_id();
+            std::cout << "=T" << (*he)->paired_he()->get_tri()->get_id();
         std::cout << ")" << std::endl;
     }
 }

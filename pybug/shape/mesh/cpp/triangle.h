@@ -15,6 +15,12 @@ private:
     Halfedge* createHalfedge(Vertex* v0, Vertex* v1, Vertex* v2,
                              unsigned halfedge_id);
     void recursiveFlip(std::set<Triangle*>* visited_tris);
+    void set_v0(Vertex* value);
+    void set_v1(Vertex* value);
+    void set_v2(Vertex* value);
+    void set_e0(Halfedge* value);
+    void set_e1(Halfedge* value);
+    void set_e2(Halfedge* value);
 
 
 public:
@@ -25,18 +31,12 @@ public:
     Vertex* get_v0();
     Vertex* get_v1();
     Vertex* get_v2();
-    void set_v0(Vertex* value);
-    void set_v1(Vertex* value);
-    void set_v2(Vertex* value);
 
     // the corresponding half edges for this triangle
     // (note v0->-e0->-v1->-e1->v2->-e2->v0)
     Halfedge* get_e0();
     Halfedge* get_e1();
     Halfedge* get_e2();
-    void set_e0(Halfedge* value);
-    void set_e1(Halfedge* value);
-    void set_e2(Halfedge* value);
 
     Triangle* t0();
     Triangle* t1();
@@ -53,12 +53,10 @@ public:
             double* triangle_scalar, double* vertex_scalar);
 
     // utilities
+    void trilist(double* trilist);
     void status();
     friend std::ostream& operator<<(std::ostream& out, const Triangle* t) {
-        if (t->get_id())
             return out << "T" << t->get_id();
-        else
-            return out << "TNULL";
     }
 };
 

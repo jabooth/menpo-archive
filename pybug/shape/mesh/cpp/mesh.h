@@ -6,6 +6,7 @@
 class Triangle;
 class Vertex;
 class Halfedge;
+class Edge;
 
 enum LaplacianWeightType {combinatorial, distance};
 
@@ -40,41 +41,44 @@ enum LaplacianWeightType {combinatorial, distance};
 // correct size before method invocation!
 //
 class Mesh {
-	public:
-        Mesh(unsigned *tri_index, unsigned n_triangles, unsigned n_vertices);
-        ~Mesh();
-        // pointer to an array dim(n_verticesx3) containing the coordinates
-        // for each vertex of the mesh
-        unsigned n_vertices;
-        unsigned n_triangles;
-        unsigned n_fulledges;
-        unsigned n_halfedges;
-        // storage for the c++ objects for each triangle and vertex
-        std::vector<Triangle*>* triangles;
-        std::vector<Vertex*>* vertices;
-        std::set<Halfedge*>* edges; // only one per edge, no grouping
-        std::set<Halfedge*>* halfedges;
+private:
 
-        void add_edge(Halfedge* halfedge);
-        void generate_edge_index(unsigned* edgeIndex);
+public:
+    Mesh(unsigned *tri_index, unsigned n_triangles, unsigned n_vertices);
+    ~Mesh();
+    // storage for the c++ objects for each triangle and vertex
+    std::vector<Triangle*>* triangles;
+    std::vector<Vertex*>* vertices;
+    std::set<Edge*>* edges;
+    std::set<Halfedge*>* halfedges;
 
-        // general reductions between vertices/triangles/edges/halfedges
-        void reduce_tri_scalar_to_vertices(double* triangle_scalar,
-                double* vertex_scalar);
-        void reduce_tri_scalar_per_vertex_to_vertices(
-                double* triangle_scalar_per_vertex, double* vertex_scalar);
+    void add_edge(Edge* edge);
+    void generate_edge_index(unsigned* edgeIndex);
+    void add_halfedge(Halfedge* halfedge);
 
-        // specialist methods for Laplacian calculations
-        void laplacian(unsigned* i_sparse, unsigned* j_sparse,
-                double*   v_sparse, LaplacianWeightType weight_type);
-        void cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
-                				 double* v_sparse, double* cotans_per_v);
+    // general reductions between vertices/triangles/edges/halfedges
+    void reduce_tri_scalar_to_vertices(double* triangle_scalar,
+            double* vertex_scalar);
+    void reduce_tri_scalar_per_vertex_to_vertices(
+            double* triangle_scalar_per_vertex, double* vertex_scalar);
 
-        // utilities
-        void verify_mesh();
-        void test_contiguous();
-        std::vector< std::set<Vertex*> > contiguous_regions();
-        void test_chiral_consistency();
+    // specialist methods for Laplacian calculations
+    void laplacian(unsigned* i_sparse, unsigned* j_sparse,
+            double*   v_sparse, LaplacianWeightType weight_type);
+    void cotangent_laplacian(unsigned* i_sparse, unsigned* j_sparse,
+                             double* v_sparse, double* cotans_per_v);
+
+    // size
+    unsigned n_vertices() const;
+    unsigned n_triangles() const;
+    unsigned n_edges() const;
+    unsigned n_halfedges() const;
+    unsigned n_fulledges() const;
+    // utilities
+    void verify_mesh();
+    void test_contiguous();
+    std::vector< std::set<Vertex*> > contiguous_regions();
+    void test_chiral_consistency();
 };
 
 
