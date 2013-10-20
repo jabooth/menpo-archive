@@ -53,7 +53,6 @@ public:
     std::set<Halfedge*>* halfedges;
 
     void add_edge(Edge* edge);
-    void generate_edge_index(unsigned* edgeIndex);
     void add_halfedge(Halfedge* halfedge);
 
     // general reductions between vertices/triangles/edges/halfedges

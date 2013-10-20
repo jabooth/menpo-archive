@@ -14,7 +14,7 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris, unsigned n_vertices){
     triangles->reserve(n_tris);
     vertices = new std::vector<Vertex*>;
     vertices->reserve(n_vertices);
-    edges = new std::set<Halfedge*>;
+    edges = new std::set<Edge*>;
     halfedges = new std::set<Halfedge*>;
     // set the no. of full/half edges to 0
     // (on creation halfedges pairs will increment these as suitable)
@@ -34,6 +34,17 @@ Mesh::Mesh(unsigned *tri_index, unsigned n_tris, unsigned n_vertices){
     }
 }
 
+Mesh::~Mesh() {
+    triangles->clear();
+    // now all the triangles are clear we're good to delete all the vertices
+    // we initially made
+    vertices->clear();
+    delete triangles;
+    delete vertices;
+    delete edges;
+    delete halfedges;
+}
+
 unsigned Mesh::n_vertices() const {
     return vertices->size();
 }
@@ -51,13 +62,13 @@ unsigned Mesh::n_halfedges() const {
 }
 
 unsigned Mesh::n_fulledges() const {
-    unsigned n_fulledge = 0;
-    for (auto edge : edges) {
+    unsigned count = 0;
+    for (auto edge : *edges) {
         if (edge->is_fulledge()) {
-            n_fulledge++;
+            count++;
         }
     }
-    return n_fulledge;
+    return count;
 }
 
 void Mesh::add_edge(Edge* edge) {
@@ -66,27 +77,6 @@ void Mesh::add_edge(Edge* edge) {
 
 void Mesh::add_halfedge(Halfedge* halfedge) {
     halfedges->insert(halfedge);
-}
-
-void Mesh::generate_edge_index(unsigned* edge_index) {
-    std::set<Halfedge*>::iterator he;
-    unsigned count = 0;
-    for(he = edges->begin(); he != edges->end(); he++, count++)
-    {
-        edge_index[count*2]     = (*he)->get_a()->get_id();
-        edge_index[count*2 + 1] = (*he)->get_b()->get_id();
-    }
-}
-
-Mesh::~Mesh() {
-    triangles->clear();
-    // now all the triangles are clear we're good to delete all the vertices
-    // we initially made
-    vertices->clear();
-    delete triangles;
-    delete vertices;
-    delete edges;
-    delete halfedges;
 }
 
 void Mesh::verify_mesh() {
@@ -100,22 +90,10 @@ void Mesh::verify_mesh() {
 
 void Mesh::test_chiral_consistency() {
     std::cout << "CHIRALCONSISTENCY: " << std::endl;
-    unsigned fulledges_encountered = 0;
-    unsigned halfedges_encountered = 0;
     unsigned incorrectly_paired = 0;
-    for (auto edge : edges) {
-        halfedges_encountered++;
-        if (edge->part_of_fulledge()) {
-            fulledges_encountered++;
-            halfedges_encountered++;
-            if (edge->paired_he()->get_b() != edge->get_a() ||
-                    edge->paired_he()->get_a() != edge->get_b()) {
-                incorrectly_paired++;
-                std::cout << "ERROR: " << edge << " (" << edge->get_a()
-                    << "-" << edge->get_b() << ") is paired with " << edge->paired_he()
-                    << " (" << edge->paired_he()->get_a() << " - " << edge->paired_he()->get_b()
-                    << ")" << std::endl;
-            }
+    for (auto edge : *edges) {
+        if (edge->is_overdetermined_edge() || edge->is_flipped_edge()) {
+            incorrectly_paired++;
         }
     }
     if (incorrectly_paired == 0) {
@@ -124,14 +102,6 @@ void Mesh::test_chiral_consistency() {
     else {
         std::cout << "FAIL ("  << incorrectly_paired
             << " incorrect halfedge pairings)" << std::endl;
-    }
-    std::cout << "EDGECOUNT: ";
-    if (fulledges_encountered == n_fulledges() &&
-            halfedges_encountered == n_halfedges()) {
-        std::cout << "PASS" << std::endl;
-    }
-    else {
-        std::cout << "FAIL" << std::endl;
     }
 }
 
@@ -143,7 +113,7 @@ void Mesh::test_contiguous() {
     if (regions_count > 1) {
         size_t largest_region = (*vertices_per_region.begin()).size();
         int region_pc= int((100.0 * largest_region) / n_vertices());
-        std::cout << "The largest contiguous region acounts for approximatey "
+        std::cout << "The largest contiguous region accounts for approximately "
             << region_pc << "\% of the mesh." << std::endl;
     }
 }

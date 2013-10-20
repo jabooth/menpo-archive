@@ -33,6 +33,10 @@ Edge::~Edge() {
     delete halfedges_;
 }
 
+unsigned Edge::n_halfedges() const {
+    return halfedges_->size();
+}
+
 bool Edge::includes_vertex(Vertex* vertex) const {
     for (auto v : vertices_) {
         if (v == vertex)
@@ -40,6 +44,19 @@ bool Edge::includes_vertex(Vertex* vertex) const {
     }
     return false;
 }
+
+bool Edge::is_flipped_edge() const {
+    if (n_halfedges() != 2)
+        return false;
+    Halfedge* first_he = *(halfedges_->begin());
+    Vertex* a = first_he->get_a();
+    for (auto he = halfedges_->begin() + 1; he != halfedges_->end(); he++) {
+        if ((*he)->get_a() != a)
+            return false;
+    }
+    return true;
+}
+
 
 Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
                    Triangle* tri, unsigned tri_he_id) :
@@ -71,6 +88,10 @@ Vertex* Halfedge::get_b() const {
 
 Vertex* Halfedge::get_opp() const {
 	return opp_;
+}
+
+Edge* Halfedge::get_edge() const {
+    return edge_;
 }
 
 void Halfedge::set_a(Vertex* value) {

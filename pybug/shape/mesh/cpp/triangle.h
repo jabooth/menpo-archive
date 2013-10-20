@@ -8,7 +8,7 @@ class Halfedge;
 class Triangle : public MeshAttribute {
 private:
     Vertex *v0_, *v1_, *v2_;
-    Halfedge *e0_, *e1_, *e2_;
+    Halfedge *he0_, *he1_, *he2_;
 
     // repairs damaged chiral meshes (ensures all faces point same way)
     void resolveChirality(bool e0_bad, bool e1_bad, bool e2_bad);
@@ -18,9 +18,9 @@ private:
     void set_v0(Vertex* value);
     void set_v1(Vertex* value);
     void set_v2(Vertex* value);
-    void set_e0(Halfedge* value);
-    void set_e1(Halfedge* value);
-    void set_e2(Halfedge* value);
+    void set_he0(Halfedge* value);
+    void set_he1(Halfedge* value);
+    void set_he2(Halfedge* value);
 
 
 public:
@@ -28,19 +28,25 @@ public:
     ~Triangle();
 
     // accessors
-    Vertex* get_v0();
-    Vertex* get_v1();
-    Vertex* get_v2();
+    Vertex* get_v0() const;
+    Vertex* get_v1() const;
+    Vertex* get_v2() const;
 
     // the corresponding half edges for this triangle
-    // (note v0->-e0->-v1->-e1->v2->-e2->v0)
-    Halfedge* get_e0();
-    Halfedge* get_e1();
-    Halfedge* get_e2();
+    // (note v0->-he0->-v1->-he1->v2->-he2->v0)
+    Halfedge* get_he0() const;
+    Halfedge* get_he1() const;
+    Halfedge* get_he2() const;
 
-    Triangle* t0();
-    Triangle* t1();
-    Triangle* t2();
+    // the parent edges of the halfedges
+    Edge* e0() const;
+    Edge* e1() const;
+    Edge* e2() const;
+
+    // joined triangles. May raise Exception if there is no joint triangle
+    Triangle* t0() const;
+    Triangle* t1() const;
+    Triangle* t2() const;
     std::set<Triangle*> adjacent_triangles();
 
     // repairing

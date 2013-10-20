@@ -17,14 +17,18 @@ public:
 
 class Edge : public AbstractEdge {
 private:
-    std::set<Halfedge *> halfedges_;
+    std::set<Halfedge *>* halfedges_;
 
 public:
     Edge(Mesh* mesh, Vertex* a, Vertex* b);
+    ~Edge();
+    unsigned n_halfedges() const;
+
     bool includes_vertex(Vertex* vertex) const;
     bool is_halfedge() const;
     bool is_fulledge() const;
     bool is_overdetermined_edge() const;
+    bool is_flipped_edge() const;
 };
 
 
@@ -48,6 +52,7 @@ public:
     Vertex* get_a() const;
     Vertex* get_b() const;
     Vertex* get_opp() const;
+    Edge* get_edge() const;
     void set_a(Vertex* value);
     void set_b(Vertex* value);
     void set_opp(Vertex* value);
