@@ -22,28 +22,30 @@ private:
 public:
     Edge(Mesh* mesh, Vertex* a, Vertex* b);
     ~Edge();
-    void add_halfedge(Halfedge* halfedge);
     unsigned n_halfedges() const;
+    std::set<Halfedge*>* get_halfedges() const;
+    void add_halfedge(Halfedge* halfedge);
 
-    bool includes_vertex(Vertex* vertex) const;
+    // edge status
     bool is_halfedge() const;
     bool is_fulledge() const;
     bool is_overdetermined_edge() const;
     bool is_flipped_edge() const;
+    bool includes_vertex(Vertex* vertex) const;
+    bool includes_triangle(Triangle* t) const;
+    // TODO includes halfedge
 };
 
 
 class Halfedge : public AbstractEdge
 {
 private:
-    Edge* edge_;  // edge I belong too
+    Edge* edge_;  // edge I belong to
     Vertex* a_;  // start of HE
     Vertex* b_;  // end of HE
     Vertex* opp_;  // opposite vertex on my triangle
-    Triangle* tri_;  // triangle I belong too
-    Halfedge* paired_halfedge_;
+    Triangle* tri_;  // triangle I belong to
     void set_tri(Triangle* value);
-    void set_paired_he(Halfedge* value);
 
 public:
     Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
@@ -54,17 +56,19 @@ public:
     Vertex* get_b() const;
     Vertex* get_opp() const;
     Edge* get_edge() const;
+    Triangle* get_tri() const;
     void set_a(Vertex* value);
     void set_b(Vertex* value);
     void set_opp(Vertex* value);
-    Triangle* get_tri() const;
+
     Halfedge* paired_he() const;
     Triangle* paired_tri() const;
 
     // status of edge
-    bool isolated_halfedge();
-    bool part_of_fulledge() const;
-    bool part_of_overdetermined_edge();
+    bool is_isolated_edge() const;
+    bool is_part_of_fulledge() const;
+    bool is_part_of_overdetermined_edge() const;
+    bool is_part_of_flipped_edge() const;
 
     void flip(); // flip this half edge, fixing up all vertex pointers
     // along the way

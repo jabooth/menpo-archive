@@ -14,6 +14,10 @@ AbstractEdge::~AbstractEdge() {
     delete vertices_;
 }
 
+std::set<Vertex*>* AbstractEdge::get_vertices() const {
+    return vertices_;
+}
+
 double AbstractEdge::length() const {
     // TODO calculate this
     return 1.0;
@@ -38,34 +42,16 @@ unsigned Edge::n_halfedges() const {
     return halfedges_->size();
 }
 
+std::set<Halfedge*>* Edge::get_halfedges() const {
+    return halfedges_;
+}
+
 void Edge::add_halfedge(Halfedge* halfedge) {
     halfedges_->insert(halfedge);
 }
 
-bool Edge::includes_vertex(Vertex* vertex) const {
-    for (auto v : *vertices_) {
-        if (v == vertex)
-            return true;
-    }
-    return false;
-}
-
-bool Edge::is_flipped_edge() const {
-    if (n_halfedges() != 2)
-        return false;
-    // we know there are only two he's - pull them off
-    auto he_it = halfedges_->begin();
-    Halfedge* he_a = *(he_it);
-    he_it++;
-    Halfedge* he_b = *(he_it);
-    if (he_a->get_a() == he_b->get_a()) {
-            return true;
-    }
-    return false;
-}
-
-bool Edge::is_overdetermined_edge() const {
-    return n_halfedges() > 2;
+bool Edge::is_halfedge() const {
+    return n_halfedges() == 1;
 }
 
 bool Edge::is_fulledge() const {
@@ -82,15 +68,50 @@ bool Edge::is_fulledge() const {
     return false;
 }
 
+bool Edge::is_overdetermined_edge() const {
+    return n_halfedges() > 2;
+}
+
+bool Edge::is_flipped_edge() const {
+    if (n_halfedges() != 2)
+        return false;
+    // we know there are only two he's - pull them off
+    auto he_it = halfedges_->begin();
+    Halfedge* he_a = *(he_it);
+    he_it++;
+    Halfedge* he_b = *(he_it);
+    if (he_a->get_a() == he_b->get_a()) {
+            return true;
+    }
+    return false;
+}
+
+bool Edge::includes_vertex(Vertex* vertex) const {
+    for (auto v : *vertices_) {
+        if (v == vertex)
+            return true;
+    }
+    return false;
+}
+
+bool Edge::includes_triangle(Triangle* t) const {
+    for (auto he : *halfedges_) {
+        if (he->get_tri() == t)
+            return true;
+    }
+    return false;
+}
+
 
 Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
                    Triangle* tri, unsigned tri_he_id) :
                         AbstractEdge(mesh, a, b) {
-    try {
-        edge_ = a->edge_to_vertex(b);
-    } catch (std::exception& e) {
+    edge_ = a->edge_to_vertex(b);
+    if (!edge_) {
         std::cout << "no edge exists - building a new one" << std::endl;
         edge_ = new Edge(mesh, a, b);
+    } else {
+        std::cout << " using existing edge: " << edge_ << std::endl;
     }
     a_ = a;
     b_ = b;
@@ -122,6 +143,10 @@ Edge* Halfedge::get_edge() const {
     return edge_;
 }
 
+Triangle* Halfedge::get_tri() const {
+    return tri_;
+}
+
 void Halfedge::set_a(Vertex* value) {
 	a_ = value;
 }
@@ -134,28 +159,47 @@ void Halfedge::set_opp(Vertex* value) {
 	opp_ = value;
 }
 
-Halfedge* Halfedge::paired_he() const {
-    return paired_halfedge_;
-}
-
-void Halfedge::set_paired_he(Halfedge* value) {
-    paired_halfedge_ = value;
-}
-
-Triangle* Halfedge::get_tri() const {
-    return tri_;
-}
-
 void Halfedge::set_tri(Triangle* value) {
     tri_ = value;
 }
 
-bool Halfedge::part_of_fulledge() const {
-    return paired_he() != NULL;
+Halfedge* Halfedge::paired_he() const {
+    if (!(is_part_of_fulledge() || is_part_of_flipped_edge())) {
+        return nullptr;
+    } else {
+        auto halfedges = get_edge()->get_halfedges();
+        for (auto he : *halfedges) {
+            if (he != this) {
+                return he;
+            }
+        }
+        throw 1; // should never happen
+    }
 }
 
 Triangle* Halfedge::paired_tri() const {
-    return this->part_of_fulledge() ? paired_he()->get_tri() : NULL;
+    auto he = paired_he();
+    if(he) {
+        return he->get_tri();
+    } else {
+        return nullptr;
+    }
+}
+
+bool Halfedge::is_isolated_edge() const {
+    return get_edge()->is_halfedge();
+}
+
+bool Halfedge::is_part_of_fulledge() const {
+    return get_edge()->is_fulledge();
+}
+
+bool Halfedge::is_part_of_overdetermined_edge() const {
+    return get_edge()->is_overdetermined_edge();
+}
+
+bool Halfedge::is_part_of_flipped_edge() const {
+    return get_edge()->is_flipped_edge();
 }
 
 Halfedge* Halfedge::ccw_around_tri() {
@@ -171,3 +215,4 @@ void Halfedge::flip() {
     set_a(get_b());
     set_b(v_a_temp);
 }
+

@@ -1,4 +1,3 @@
-#include <exception>
 #include <iostream>
 #include <ostream>
 #include <assert.h>
@@ -38,7 +37,7 @@ Edge* Vertex::edge_to_vertex(Vertex* vertex) {
         if (edge->includes_vertex(vertex))
             return edge;
     }
-    throw std::exception();
+    return nullptr;
 }
 
 Halfedge* Vertex::halfedge_on_tri(Triangle* tri) {
@@ -47,7 +46,7 @@ Halfedge* Vertex::halfedge_on_tri(Triangle* tri) {
             return he;
         }
     }
-    throw std::exception();
+    return nullptr;
 }
 
 Halfedge* Vertex::halfedge_to_vertex(Vertex* v) {
@@ -55,7 +54,7 @@ Halfedge* Vertex::halfedge_to_vertex(Vertex* v) {
         if(he->get_b() == v)
             return he;
     }
-    throw std::exception();
+    return nullptr;
 }
 
 Halfedge* Vertex::halfedge_to_or_from_vertex(Vertex* v) {
@@ -172,7 +171,7 @@ void Vertex::verify_halfedge_connectivity() {
         if(he->ccw_around_tri()->ccw_around_tri()->get_b() != he->get_a())
             std::cout << "cannie spin raarnd the triangle like man!"
                 << std::endl;
-        if(he->part_of_fulledge()) {
+        if(he->is_part_of_fulledge()) {
             if(he->paired_he()->get_a() != he->get_b() ||
                he->paired_he()->get_b() != he->get_a())
                 std::cout << "T" << triangle->get_id() << " H:" << he->get_id() << std::endl;
@@ -184,13 +183,13 @@ void Vertex::status() {
     std::cout << "V" << get_id() << std::endl;
     for(auto he : halfedges_) {
         std::cout << "|" ;
-        if (he->part_of_fulledge())
+        if (he->is_part_of_fulledge())
             std::cout << "=";
         else
             std::cout << "-";
         std::cout << "V" << he->get_b()->get_id();
         std::cout << " (T" << he->get_tri()->get_id();
-        if (he->part_of_fulledge())
+        if (he->is_part_of_fulledge())
             std::cout << "=T" << he->paired_he()->get_tri()->get_id();
         std::cout << ")" << std::endl;
     }

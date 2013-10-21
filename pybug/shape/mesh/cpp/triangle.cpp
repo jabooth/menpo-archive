@@ -25,7 +25,7 @@ Triangle::Triangle(Mesh* mesh, unsigned tri_id, Vertex* v0,
     bool e2_flip = he2_->get_edge()->is_flipped_edge();
 
     // deal with any that need flipping
-    if (e0_flip || e0_flip || e0_flip)
+    if (e0_flip || e1_flip || e2_flip)
         resolveChirality(e0_flip, e1_flip, e2_flip);
 
     // now, we should definitely have a well formed triangle.
@@ -200,21 +200,21 @@ void Triangle::status() {
     Halfedge* h20 = v2_->halfedge_on_tri(this);
     unsigned width = 12;
     std::cout  << std::setw(width) << "V0(" << v0_->get_id() << ")";
-    if (h01->part_of_fulledge()) {
+    if (h01->is_part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
     std::cout  << std::setw(width) << "V1(" << v1_->get_id() << ")";
-    if (h12->part_of_fulledge()) {
+    if (h12->is_part_of_fulledge()) {
         std::cout << "============";
     }
     else {
         std::cout << "------------";
     }
     std::cout  << std::setw(width) << "V2(" << v2_->get_id() << ")";
-    if (h20->part_of_fulledge()) {
+    if (h20->is_part_of_fulledge()) {
         std::cout << "============";
     }
     else {
@@ -223,21 +223,21 @@ void Triangle::status() {
     std::cout << std::setw(width) << "V0(" << v0_->get_id() << ")" << std::endl;
 
     std::cout  << std::setw(width) << " ";
-    if (h01->part_of_fulledge()) {
+    if (h01->is_part_of_fulledge()) {
         std::cout  << std::setw(width) << h01->paired_tri()->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
-    if (h12->part_of_fulledge()) {
+    if (h12->is_part_of_fulledge()) {
         std::cout << std::setw(width) << h12->paired_tri()->get_id();
     }
     else {
         std::cout << " -- ";
     }
     std::cout  << std::setw(width) << " ";
-    if (h20->part_of_fulledge()) {
+    if (h20->is_part_of_fulledge()) {
         std::cout << std::setw(width) << h20->paired_tri()->get_id();
     }
     else {
