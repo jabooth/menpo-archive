@@ -905,6 +905,26 @@ class Rotation2D(AbstractRotation):
             raise DimensionalityError("Rotation2D has to be built from a 2D"
                                       " rotation matrix")
 
+    @classmethod
+    def angle_ccw(cls, angle, radians=False):
+        r"""
+        """
+        if not radians:
+            angle = (angle * np.pi) / 180.0
+        cos_a = np.cos(angle)
+        sin_a = np.sin(angle)
+        return Rotation2D(np.array([[cos_a, -sin_a],
+                                    [sin_a, cos_a]]))
+
+    @classmethod
+    def angle_cw(cls, angle, radians=False):
+        r"""
+        """
+        if not radians:
+            angle = (angle * np.pi) / 180.0
+        # now we have the radians, subtract from 2pi and call the cw method
+        return Rotation2D.angle_ccw((2 * np.pi) - angle, radians=True)
+
     def axis_and_angle_of_rotation(self):
         r"""
         Decomposes this 2D rotation's rotation matrix into a angular rotation
