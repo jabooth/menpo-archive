@@ -893,13 +893,21 @@ class Rotation2D(AbstractRotation):
     rotation_matrix : (2, 2) ndarray
         The 2D rotation matrix.
 
+    validate: boolean
+        If True the matrix will be validated to ensure it is well formatted.
+        If False the validation is skipped.
+
+        Default True
     Raises
     ------
     DimensionalityError
         Only 2D rotation matrices are supported.
     """
 
-    def __init__(self, rotation_matrix):
+    def __init__(self, rotation_matrix, validate=True):
+        if validate and not validate_2d_rotation_matrix(rotation_matrix):
+            raise ValueError("{} is not a legal rotation matrix".format(
+                rotation_matrix))
         super(Rotation2D, self).__init__(rotation_matrix)
         if self.n_dims != 2:
             raise DimensionalityError("Rotation2D has to be built from a 2D"
@@ -908,22 +916,31 @@ class Rotation2D(AbstractRotation):
     @classmethod
     def angle_ccw(cls, angle, radians=False):
         r"""
+        Convenience constructor - 2D rotation matrix based on CCW rotation
+        in either radians or degrees.
+
+        Parameters
+        ----------
+
+        angle : float
+            Angle in degrees or radians that the rotation matrix will rotate
+            objects CCW about the origin
+        radians: boolean
+            If true the angle is interpreted as radians, if false, degrees
+            Default: False
+
+        Returns:
+        rotation : :class:`Rotation2D`
+            A suitable rotation matrix
         """
         if not radians:
             angle = (angle * np.pi) / 180.0
         cos_a = np.cos(angle)
         sin_a = np.sin(angle)
+        # no need to validate as we have explicitly constructed the correct
+        # structure
         return Rotation2D(np.array([[cos_a, -sin_a],
-                                    [sin_a, cos_a]]))
-
-    @classmethod
-    def angle_cw(cls, angle, radians=False):
-        r"""
-        """
-        if not radians:
-            angle = (angle * np.pi) / 180.0
-        # now we have the radians, subtract from 2pi and call the cw method
-        return Rotation2D.angle_ccw((2 * np.pi) - angle, radians=True)
+                                    [sin_a, cos_a]]), validate=False)
 
     def axis_and_angle_of_rotation(self):
         r"""
@@ -1473,3 +1490,25 @@ class Translation(DiscreteAffineTransform, SimilarityTransform):
 
     def from_vector_inplace(self, p):
         self.homogeneous_matrix[:-1, -1] = p
+
+
+def validate_2d_rotation_matrix(rot_m):
+    r"""
+    Returns True iff the supplied 2D rotation matrix is well formed.
+
+    Parameters
+    ----------
+
+    rot_m : (2, 2) ndarray
+        A rotation matrix
+
+    Returns
+    -------
+
+    is_valid: boolean
+        True iff the rotation matrix had a legal format
+    """
+    return (rot_m.shape == (2, 2) and
+            np.allclose(rot_m[0, 0], rot_m[-1, -1]) and
+            np.allclose(rot_m[0, 1], -rot_m[1, 0]) and
+            np.allclose(np.arcsin(rot_m[1, 0]), np.arccos(rot_m[0, 0])))
