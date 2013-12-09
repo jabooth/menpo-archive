@@ -12,7 +12,7 @@ class AffineTransform(AlignableTransform):
     The base class for all n-dimensional affine transformations. Provides
     methods to break the transform down into it's constituent
     scale/rotation/translation, to view the homogeneous matrix equivalent,
-    and to chain this transform with other affine transformations.
+    and to compose this transform with other affine transformations.
 
     Parameters
     ----------
@@ -25,9 +25,6 @@ class AffineTransform(AlignableTransform):
         self._homogeneous_matrix = None
         # let the setter handle initialization
         self.homogeneous_matrix = homogeneous_matrix
-
-    def _init_with_homogeneous(self, homogeneous_matrix):
-        self = self.__init__(homogeneous_matrix)
 
     @classmethod
     def _align(cls, source, target, **kwargs):
@@ -76,16 +73,14 @@ class AffineTransform(AlignableTransform):
            is non-singular, which generally means at least 2 corresponding
            points are required.
         """
-        optimal_h = AffineTransform._build_alignment_homogeneous_matrix(source,
-                                                                        target)
+        optimal_h = AffineTransform._alignment_h_matrix(source, target)
         affine_transform = AffineTransform(optimal_h)
         affine_transform._source = source
         affine_transform._target = target
         return affine_transform
 
     def _target_setter(self, new_target):
-        self.homogeneous_matrix = self._build_alignment_homogeneous_matrix(
-            self.source, new_target)
+        self.homogeneous_matrix = self._alignment_h_matrix(self.source, new_target)
         self._target = new_target
 
     @property
@@ -121,6 +116,10 @@ class AffineTransform(AlignableTransform):
 
     @homogeneous_matrix.setter
     def homogeneous_matrix(self, value):
+        r"""
+        Ensures the homogeneous matrix is legal and then stores a copy of
+        the value passed in on self.homogeneous_matrix
+        """
         shape = value.shape
         if len(shape) != 2 and shape[0] != shape[1]:
             raise ValueError("You need to provide a square homogeneous matrix")
@@ -137,7 +136,7 @@ class AffineTransform(AlignableTransform):
     @property
     def linear_component(self):
         r"""
-        Returns just the linear transform component of this affine
+        Returns a view onto the linear transform component of this affine
         transform.
 
         :type: (D, D) ndarray
@@ -147,7 +146,8 @@ class AffineTransform(AlignableTransform):
     @property
     def translation_component(self):
         r"""
-        Returns just the translation component.
+        Returns a view onto just the translation component of this affine
+        transform
 
         :type: (D,) ndarray
         """
@@ -230,7 +230,7 @@ class AffineTransform(AlignableTransform):
         elif isinstance(self, type(transform)):
             new_self = transform.compose(self)
         elif (isinstance(self, SimilarityTransform) and
-                  isinstance(transform, SimilarityTransform)):
+              isinstance(transform, SimilarityTransform)):
             new_self = SimilarityTransform(self.homogeneous_matrix)
             new_self.compose_inplace(transform)
         elif isinstance(transform, AffineTransform):
@@ -412,17 +412,17 @@ class AffineTransform(AlignableTransform):
         # to it's usual role in building novel instances where some kind of
         # state needs to be stolen from a pre-existing instance (hence the
         # need for this to in general be an instance method).
-        return AffineTransform(cls._homogeneous_matrix_from_parameters(p))
+        return AffineTransform(cls._h_matrix_from_vector(p))
 
     def from_vector_inplace(self, p):
         r"""
         Updates this AffineTransform in-place from the new parameters. See
         from_vector for details of the parameter format
         """
-        self.homogeneous_matrix = self._homogeneous_matrix_from_parameters(p)
+        self.homogeneous_matrix = self._h_matrix_from_vector(p)
 
     @staticmethod
-    def _homogeneous_matrix_from_parameters(p):
+    def _h_matrix_from_vector(p):
         r"""
         See from_vector for details of the parameter format expected.
         """
@@ -439,7 +439,7 @@ class AffineTransform(AlignableTransform):
         return homogeneous_matrix
 
     @staticmethod
-    def _build_alignment_homogeneous_matrix(source, target):
+    def _alignment_h_matrix(source, target):
         r"""
         See _align() for details. This is a separate method just so it can
         be shared by _target_setter().
