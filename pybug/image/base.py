@@ -3,7 +3,7 @@ import numpy as np
 from copy import deepcopy
 from pybug.base import Vectorizable
 from pybug.landmark import Landmarkable
-from pybug.transform.affine import Translation
+from pybug.transform.affine import Translation, UniformScale, NonUniformScale
 from pybug.visualize.base import Viewable, ImageViewer
 
 
@@ -321,7 +321,7 @@ class AbstractNDImage(Vectorizable, Landmarkable, Viewable):
                   zip(list(min_bounded), list(max_bounded))]
         self.pixels = self.pixels[slices]
         # update all our landmarks
-        lm_translation = Translation(-min_indices)
+        lm_translation = Translation(-min_bounded)
         lm_translation.apply_inplace(self.landmarks)
         return self
 
@@ -370,7 +370,8 @@ class AbstractNDImage(Vectorizable, Landmarkable, Viewable):
     def crop_to_landmarks(self, group=None, label=None, boundary=0,
                           constrain_to_boundary=True):
         r"""
-        Crop this image to be bounded just around a set of landmarks
+        Crop this image to be bounded around a set of landmarks with an
+        optional n_pixel boundary
 
         Parameters
         ----------
@@ -381,7 +382,7 @@ class AbstractNDImage(Vectorizable, Landmarkable, Viewable):
             Default: None
 
         label: string, Optional
-            The label of of the landmark manager that you wish to use. If no
+            The label of of the landmark manager that you wish to use. If None
              all landmarks in the group are used.
 
             Default: None
@@ -408,6 +409,60 @@ class AbstractNDImage(Vectorizable, Landmarkable, Viewable):
         min_indices, max_indices = pc.bounds(boundary=boundary)
         self.crop(min_indices, max_indices,
                   constrain_to_boundary=constrain_to_boundary)
+
+    def crop_to_landmarks_proportion(self, boundary_proportion,
+                                     group=None, label=None,
+                                     minimum=True,
+                                     constrain_to_boundary=True):
+        r"""
+        Crop this image to be bounded around a set of landmarks with a
+        border proportional to the landmark spread or range.
+
+        Parameters
+        ----------
+        boundary_proportion: float
+            Additional padding to be added all around the landmarks
+            bounds defined as a proportion of the landmarks' range. See
+            minimum for a definition of how the range is calculated.
+        group : string, Optional
+            The key of the landmark set that should be used. If None,
+            and if there is only one set of landmarks, this set will be used.
+
+            Default: None
+
+        label: string, Optional
+            The label of of the landmark manager that you wish to use. If None
+             all landmarks in the group are used.
+
+            Default: None
+
+        minimum: bool, Optional
+            If True the specified proportion is relative to the minimum
+            value of the landmarks' per-dimension range; if False wrt the
+            maximum value of the landmarks' per-dimension range.
+
+            Default: True
+
+        constrain_to_boundary: boolean, optional
+            If True the crop will be snapped to not go beyond this images
+            boundary. If False, an ImageBoundaryError will be raised if an
+            attempt is made to go beyond the edge of the image.
+
+            Default: True
+
+        Raises
+        ------
+        ImageBoundaryError
+            Raised if constrain_to_boundary is False, and an attempt is made
+            to crop the image in a way that violates the image bounds.
+        """
+        pc = self.landmarks[group][label].lms
+        if minimum:
+            boundary = boundary_proportion * np.min(pc.range())
+        else:
+            boundary = boundary_proportion * np.max(pc.range())
+        self.crop_to_landmarks(group=group, label=label, boundary=boundary,
+                               constrain_to_boundary=constrain_to_boundary)
 
     def constrain_points_to_bounds(self, points):
         r"""
@@ -489,16 +544,13 @@ class AbstractNDImage(Vectorizable, Landmarkable, Viewable):
         # pixels. Store those in a (n_pixels, n_channels) array.
         sampled_pixel_values = _interpolator(self.pixels, points_to_sample,
                                              **kwargs)
-
-        # Set all NaN pixels to 0
-        sampled_pixel_values = np.nan_to_num(sampled_pixel_values)
+        # set any nan values to 0
+        sampled_pixel_values[np.isnan(sampled_pixel_values)] = 0
         # build a warped version of the image
         warped_image = self._build_warped_image(template_mask,
                                                 sampled_pixel_values)
 
         if warp_landmarks:
-            raise Exception("Warp Landmarks is not supported until Transform"
-                            ".pseudoinverse is")
             warped_image.landmarks = self.landmarks
             transform.pseudoinverse.apply_inplace(warped_image.landmarks)
         return warped_image
@@ -511,3 +563,47 @@ class AbstractNDImage(Vectorizable, Landmarkable, Viewable):
         the MaskedNDImage implementation.
         """
         raise NotImplementedError
+
+    def rescale(self, scale, interpolator='scipy', **kwargs):
+        r"""
+        Return a copy of this image, rescaled by a given factor.
+        All image information (landmarks, the mask the case of
+        :class:`MaskedNDImage`) is rescaled appropriately.
+
+        Parameters
+        ----------
+        scale : float
+            The scale factor.
+        kwargs : dict
+            Passed through to the interpolator. See `pybug.interpolation`
+            for details.
+
+        Returns
+        -------
+        rescaled_image : type(self)
+            A copy of this image, rescaled.
+        """
+        if scale <= 0:
+            raise ValueError("Scale has to be a positive float")
+
+        transform = UniformScale(scale, self.n_dims)
+        from pybug.image.boolean import BooleanNDImage
+        # use the scale factor to make the template mask bigger
+        template_mask = BooleanNDImage.blank(transform.apply(self.shape))
+        # due to image indexing, we can't just apply the pseduoinverse
+        # transform to achieve the scaling we want though!
+        # Consider a 3x rescale on a 2x4 image. Looking at each dimension:
+        #    H 2 -> 6 so [0-1] -> [0-5] = 5/1 = 5x
+        #    W 4 -> 12 [0-3] -> [0-11] = 11/3 = 3.67x
+        # => need to make the correct scale per dimension!
+        shape = np.array(self.shape, dtype=np.float)
+        # scale factors = max_index_after / current_max_index
+        # (note that max_index = length - 1, as 0 based)
+        scale_factors = (scale * shape - 1) / (shape - 1)
+        inverse_transform = NonUniformScale(scale_factors).pseudoinverse
+        # Note here we pass warp_mask to warp_to. In the case of
+        # AbstractNDImages that aren't MaskedNDImages this kwarg will
+        # harmlessly fall through so we are fine.
+        return self.warp_to(template_mask, inverse_transform,
+                            warp_landmarks=True, warp_mask=True,
+                            interpolator=interpolator, **kwargs)

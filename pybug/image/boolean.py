@@ -152,7 +152,7 @@ class BooleanNDImage(AbstractNDImage):
         rebuilding a boolean image **itself** from boolean values. The mask
         is in no way interpreted in performing the operation, in contrast to
         MaskedNDImage, where only the masked region is used in from_vector()
-        and as_vector().
+        and as_vector(). Any image landmarks are transferred in the process.
 
         Parameters
         ----------
@@ -164,7 +164,9 @@ class BooleanNDImage(AbstractNDImage):
         image : :class:`BooleanNDImage`
             New BooleanImage of same shape as this image
         """
-        return BooleanNDImage(flattened.reshape(self.shape))
+        mask = BooleanNDImage(flattened.reshape(self.shape))
+        mask.landmarks = self.landmarks
+        return mask
 
     def invert(self):
         r"""
@@ -302,9 +304,9 @@ class BooleanNDImage(AbstractNDImage):
                 "The order of the interpolation on a boolean image has to be "
                 "0 (attempted to set {})".format(manually_set_order))
         kwargs['order'] = 0
-        AbstractNDImage.warp_to(self, template_mask, transform,
-                                warp_landmarks=warp_landmarks,
-                                interpolator=interpolator, **kwargs)
+        return AbstractNDImage.warp_to(self, template_mask, transform,
+                                       warp_landmarks=warp_landmarks,
+                                       interpolator=interpolator, **kwargs)
 
     def _build_warped_image(self, template_mask, sampled_pixel_values):
         r"""
@@ -315,5 +317,5 @@ class BooleanNDImage(AbstractNDImage):
         warped_image = BooleanNDImage.blank(template_mask.shape)
         # As we are a mask image, we have to implement the update a little
         # more manually than other image classes.
-        warped_image.pixels[warped_image.mask] = sampled_pixel_values.flatten()
+        warped_image.pixels[warped_image.mask] = sampled_pixel_values
         return warped_image

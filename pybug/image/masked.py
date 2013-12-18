@@ -186,6 +186,8 @@ class MaskedNDImage(AbstractNDImage):
         channel to an image but maintain the shape. For example, when
         calculating the gradient.
 
+        Note that landmarks are transferred in the process.
+
         Parameters
         ----------
         flattened : (``n_pixels``,)
@@ -212,7 +214,9 @@ class MaskedNDImage(AbstractNDImage):
         image_data[self.mask.mask] = pixels_per_channel
         # call the constructor accounting for the fact that some image
         # classes expect a channel axis and some don't.
-        return type(self)._init_with_channel(image_data, mask=self.mask)
+        new_image = type(self)._init_with_channel(image_data, mask=self.mask)
+        new_image.landmarks = self.landmarks
+        return new_image
 
     def from_vector_inplace(self, vector):
         r"""
@@ -325,7 +329,7 @@ class MaskedNDImage(AbstractNDImage):
             made to crop the image in a way that violates the image bounds.
         """
         min_indices, max_indices = self.mask.bounds_true(
-            boundary=boundary, constrain_to_boundary=False)
+            boundary=boundary, constrain_to_bounds=False)
         # no point doing the bounds check twice - let the crop do it only.
         self.crop(min_indices, max_indices,
                   constrain_to_boundary=constrain_to_boundary)
@@ -385,6 +389,8 @@ class MaskedNDImage(AbstractNDImage):
         # the template mask by default. If the user doesn't want to warp the
         # mask, we are done. If they do want to warp the mask, we warp the
         # mask separately and reattach.
+        # TODO an optimisation could be added here for the case where mask
+        # is all true/all false.
         if warp_mask:
             warped_mask = self.mask.warp_to(template_mask, transform,
                                             warp_landmarks=warp_landmarks,
