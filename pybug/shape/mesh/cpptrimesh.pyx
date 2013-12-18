@@ -59,9 +59,9 @@ cdef class CppTriMesh:
 
     def __cinit__(self, points, unsigned[: , ::1] trilist not None):
         if points.shape[1] != 3:
-            raise MeshConstructionError("A CppTriMesh can only be in 3 "
-                   + "dimensions (attempting with " + str(points.shape[1]) +
-                                        ")")
+            raise MeshConstructionError(
+                "A CppTriMesh can only be in 3 dimensions "
+                "(attempting with {})".format(str(points.shape[1])))
         self.thisptr = new Mesh(&trilist[0,0], trilist.shape[0],
                                 points.shape[0])
         self.points = points

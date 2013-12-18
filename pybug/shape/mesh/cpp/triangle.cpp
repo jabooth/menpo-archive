@@ -20,13 +20,13 @@ Triangle::Triangle(Mesh* mesh, unsigned tri_id, Vertex* v0,
     he2_ = new Halfedge(mesh, v2, v0, v1, this, 2);
 
     // if the edges are now flipped, we can correct it
-    bool e0_flip = he0_->get_edge()->is_flipped_edge();
-    bool e1_flip = he1_->get_edge()->is_flipped_edge();
-    bool e2_flip = he2_->get_edge()->is_flipped_edge();
+    //bool e0_flip = he0_->get_edge()->is_flipped_edge();
+    //bool e1_flip = he1_->get_edge()->is_flipped_edge();
+    //bool e2_flip = he2_->get_edge()->is_flipped_edge();
 
     // deal with any that need flipping
-    if (e0_flip || e1_flip || e2_flip)
-        resolveChirality(e0_flip, e1_flip, e2_flip);
+    //if (e0_flip || e1_flip || e2_flip)
+     //   resolveChirality(e0_flip, e1_flip, e2_flip);
 
     // now, we should definitely have a well formed triangle.
     // lets check...

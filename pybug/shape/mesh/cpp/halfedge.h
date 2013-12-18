@@ -3,21 +3,32 @@
 #include "mesh.h"
 #include "triangle.h"
 
+/** Abstract representation of an edge in the triangle topology.
+ *
+ *
+ *
+ */
+
 class AbstractEdge: public MeshAttribute {
 protected:
-    std::set<Vertex*>* vertices_;  // the two vertices the edge involves
+    std::set<Vertex*>* vertices_;  /**< the two vertices the edge involves */
 
 public:
     AbstractEdge(Mesh* mesh, Vertex* a, Vertex* b);
     ~AbstractEdge();
-    std::set<Vertex*>* get_vertices() const;
-    double length() const;
+    // TODO returning internal state, seems pretty bad.
+    std::set<Vertex*>* get_vertices() const;  //*< the set of vertices */
+    double length() const; /**< presently unimplimented */
 };
 
+/** For any triangle mesh there is exactly one Edge between any two joined
+ *  vertices. As such an Edge is non-directional - it represents connectivity.
+ *
+ */
 
 class Edge : public AbstractEdge {
 private:
-    std::set<Halfedge *>* halfedges_;
+    std::set<Halfedge *>* halfedges_;  /**! an Edge has many Halfedges */
 
 public:
     Edge(Mesh* mesh, Vertex* a, Vertex* b);
@@ -36,6 +47,47 @@ public:
     // TODO includes halfedge
 };
 
+/** A directional Edge from a vertex to another vertex. All Halfedges belong
+ *  to an Edge (which is non-directional).
+ *
+ *  As Halfedges have a sense of direction, they also belong to a single
+ *  Triangle. There are four possible states of an Edge/HalfEdge arrangement:
+ *
+ *  1. A "half edge". An Edge that has one and only one Halfedge (and hence one
+ *     Triangle) attached. Such an Edge occurs on the edge of a triangle mesh
+ *     manifold.
+ *
+ *  2. A "full edge". An Edge that owns exactly two Halfedges. The first a->b,
+ *     the second, b->a. Each Halfedge owns a Triangle, and the two triangles
+ *     are "stitched together" along this Edge. As the Halfedge's are the
+ *     compliment of each other (they join the same two vertices but in
+ *     opposite directions) the two Triangles are therefore orientated
+ *     in a consistent manor - that is two say the surface normals of the
+ *     triangles both point in a consisent "outward" direction. This is the
+ *     Edge type found in the middle of a well ordered Triangle Mesh.
+ *
+ *  3. A "flipped edge". As a full edge, only the two Halfedge's share the same
+ *     vertices (a->b and a->b), but different Triangles (t0 and t1). This is
+ *     only possible if the Triangles are orientated in opposite directions to
+ *     each other - that is to say that we have a chiral inconsistency in the
+ *     mesh. This case is seen in the middle of a badly ordered Triangle Mesh
+ *     where two regions of well-ordered Triangles meet to create a flipped
+ *     edge. Generally this is a problematic state that should be resolved.
+ *     If the problem is resolved (by flipping triangles) the mesh can still
+ *     be completely chirially consistent.
+ *
+ *
+ *  4. An "overdetermined edge". An Edge that has three or more Halfedges. This
+ *     cannot be repaired without the use of some huristics and destruction
+ *     - the mesh is simply no longer a manifold. An attempt to repair by
+ *     removing offending triangles is possible but dangerous.
+ *
+ *  In a poorly constructed trilist,
+ *  there may be 3 or more Halfedges on one Edge - in such a case the Edge is
+ *  deemed to be overdetermined, and cannot topologically be considered a
+ *  manifold.
+ *
+ */
 
 class Halfedge : public AbstractEdge
 {

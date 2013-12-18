@@ -111,7 +111,7 @@ Halfedge::Halfedge(Mesh* mesh, Vertex* a, Vertex* b, Vertex* opposite,
         std::cout << "no edge exists - building a new one" << std::endl;
         edge_ = new Edge(mesh, a, b);
     } else {
-        std::cout << " using existing edge: " << edge_ << std::endl;
+        std::cout << "using existing edge: " << edge_ << std::endl;
     }
     a_ = a;
     b_ = b;
