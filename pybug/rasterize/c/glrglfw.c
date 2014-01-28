@@ -91,3 +91,11 @@ void glr_glfw_terminate(glr_glfw_context* context)
     glfwTerminate();
 }
 
+void glr_glfw_make_context_current(glr_glfw_context* context) {
+    GLFWwindow* current_window = glfwGetCurrentContext();
+    if (current_window != context->window) {
+        printf("The current context was switched to something else!");
+        glfwMakeContextCurrent(context->window);
+    }
+}
+

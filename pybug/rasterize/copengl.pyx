@@ -22,6 +22,7 @@ cdef extern from "./c/glrglfw.h":
                                                            int height)
     cdef void glr_glfw_init(glr_glfw_context* context)
     cdef void glr_glfw_terminate(glr_glfw_context* context)
+    cdef void glr_glfw_make_context_current(glr_glfw_context* context)
 
 
 # we need to be able to hold onto a scene reference
@@ -145,6 +146,7 @@ cdef class COpenGLRasterizer:
             np.ndarray[unsigned, ndim=2, mode="c"] trilist not None,
             np.ndarray[float, ndim=2, mode="c"] tcoords not None,
             np.ndarray[float, ndim=3, mode="c"] texture not None):
+        glr_glfw_make_context_current(self.scene.context)
         self.scene.mesh = glr_build_f3_f3_rgb_float_mesh(
             &points[0, 0], &f3v_data[0, 0], points.shape[0],
             &trilist[0, 0], trilist.shape[0], &tcoords[0, 0],

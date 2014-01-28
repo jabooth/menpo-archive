@@ -20,3 +20,4 @@ void glr_glfw_init(glr_glfw_context* context);
 
 void glr_glfw_terminate(glr_glfw_context* context);
 
+void glr_glfw_make_context_current(glr_glfw_context* context);
